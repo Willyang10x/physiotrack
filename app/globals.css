@@ -1,0 +1,162 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* --- PALETA PERSONALIZADA (PhysioTrack) --- */
+
+  /* PRIMÁRIA: Azul Petróleo (#01456d) */
+  --primary: #01456d;
+  --primary-foreground: #ffffff;
+
+  /* SECUNDÁRIA: Laranja Queimado (#ad3f00) */
+  --secondary: #ad3f00;
+  --secondary-foreground: #ffffff;
+
+  /* Fundo Base (Não é branco puro, prepara para o gradiente) */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  /* Cartões (Branco puro para destacar do fundo) */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  /* Cores de Apoio */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  --accent: #e0f2fe; /* Um azul bem clarinho para hovers */
+  --accent-foreground: #01456d;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #01456d;
+
+  --radius: 0.75rem; /* Bordas um pouco mais arredondadas (moderno) */
+
+  /* Gráficos */
+  --chart-1: #01456d;
+  --chart-2: #ad3f00;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #6366f1;
+
+  /* Sidebar */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #01456d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f0f9ff;
+  --sidebar-accent-foreground: #01456d;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #01456d;
+}
+
+.dark {
+  --background: #020817;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --card-foreground: #f8fafc;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
+  --primary: #01456d;
+  --primary-foreground: #ffffff;
+  --secondary: #ad3f00;
+  --secondary-foreground: #ffffff;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #f8fafc;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #f8fafc;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #01456d;
+  --chart-1: #01456d;
+  --chart-2: #ad3f00;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #6366f1;
+  --sidebar: #020817;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #01456d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #01456d;
+}
+
+@theme inline {
+  --font-sans: "Geist", "Geist Fallback";
+  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply text-foreground;
+    /* AQUI ESTÁ O TRUQUE DO FUNDO:
+       Cria um gradiente muito sutil que vai de um cinza-azulado quase branco
+       até o branco puro. Dá profundidade sem cansar a vista.
+    */
+    background: linear-gradient(to bottom right, #f0f4f8, #ffffff);
+    min-height: 100vh;
+  }
+
+  /* Remove ícones de dev */
+  [data-nextjs-toast-wrapper] {
+    display: none !important;
+  }
+  #vercel-toolbar,
+  [data-vercel-toolbar] {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
