@@ -5,26 +5,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Activity,
-  Users,
   Calendar,
   ArrowRight,
   ClipboardList,
   Plus,
   CheckCircle2,
 } from "lucide-react";
-// Importação do Calendário
 import { FrequencyCalendar } from "@/components/FrequencyCalendar";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  // 1. Verificar Autenticação
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return redirect("/auth/login");
 
-  // 2. Buscar Perfil Completo
   const { data: userProfile } = await supabase
     .from("profiles")
     .select("*")
@@ -39,10 +35,9 @@ export default async function DashboardPage() {
   let activeProtocol = null;
   let workoutDoneToday = false;
   let athletesList = [];
-  let athleteDates: string[] = []; // Lista de datas para o calendário
+  let athleteDates: string[] = [];
 
   if (userRole === "athlete") {
-    // A. Busca protocolo ativo
     const { data } = await supabase
       .from("protocols")
       .select("*")
@@ -52,8 +47,8 @@ export default async function DashboardPage() {
 
     activeProtocol = data;
 
-    // B. Verifica se já treinou hoje (Corrigido fuso horário BR)
     if (activeProtocol) {
+      // Ajuste de fuso horário BR
       const now = new Date();
       const brazilTime = new Date(now.getTime() - 3 * 60 * 60 * 1000);
       const today = brazilTime.toISOString().split("T")[0];
@@ -67,7 +62,6 @@ export default async function DashboardPage() {
       if (feedback) workoutDoneToday = true;
     }
 
-    // C. NOVO: Busca histórico completo de datas para o calendário
     const { data: allFeedbacks } = await supabase
       .from("daily_feedback")
       .select("date")
@@ -90,13 +84,14 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    // AJUSTE 1: padding menor no mobile (p-4) e maior no desktop (md:p-8)
+    <div className="min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-6xl">
-        {/* Cabeçalho */}
-        <header className="mb-8 flex items-center justify-between">
+        {/* AJUSTE 2: Flex-col no mobile (empilhado) e Flex-row no desktop */}
+        <header className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link href="/dashboard/profile">
-              <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-primary/20 cursor-pointer hover:border-primary transition-colors bg-white shadow-sm relative group">
+              <div className="h-14 w-14 md:h-16 md:w-16 rounded-full overflow-hidden border-2 border-primary/20 cursor-pointer hover:border-primary transition-colors bg-white shadow-sm relative group">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
@@ -104,7 +99,7 @@ export default async function DashboardPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-2xl font-bold uppercase">
+                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-xl md:text-2xl font-bold uppercase">
                     {firstName.charAt(0)}
                   </div>
                 )}
@@ -113,21 +108,25 @@ export default async function DashboardPage() {
             </Link>
 
             <div>
-              <h1 className="text-3xl font-bold text-primary">
+              <h1 className="text-2xl md:text-3xl font-bold text-primary">
                 Olá, {firstName}
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Painel do{" "}
                 {userRole === "therapist" ? "Fisioterapeuta" : "Atleta"}
               </p>
             </div>
           </div>
 
-          <form action="/auth/sign-out" method="post">
+          <form
+            action="/auth/sign-out"
+            method="post"
+            className="w-full md:w-auto"
+          >
             <Button
               variant="outline"
               type="submit"
-              className="border-primary/20 text-primary hover:bg-primary/5"
+              className="w-full md:w-auto border-primary/20 text-primary hover:bg-primary/5"
             >
               Sair
             </Button>
@@ -135,14 +134,13 @@ export default async function DashboardPage() {
         </header>
 
         {userRole === "therapist" ? (
-          /* --- VISÃO DO FISIOTERAPEUTA --- */
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
-              <Card className="bg-primary text-primary-foreground border-none">
+              <Card className="bg-primary text-primary-foreground border-none shadow-md">
                 <CardContent className="flex flex-col items-start p-6">
                   <h3 className="text-lg font-bold mb-2">Novo Tratamento</h3>
                   <p className="text-primary-foreground/90 mb-4 text-sm">
-                    Crie um novo protocolo de exercícios para um atleta.
+                    Crie um novo protocolo de exercícios.
                   </p>
                   <Button
                     asChild
@@ -155,7 +153,7 @@ export default async function DashboardPage() {
                   </Button>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Seus Atletas
@@ -169,22 +167,22 @@ export default async function DashboardPage() {
               </Card>
             </div>
 
-            <Card>
+            <Card className="shadow-sm overflow-hidden">
               <CardHeader>
                 <CardTitle className="text-primary">
                   Lista de Pacientes
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="p-0 md:p-6">
+                <div className="divide-y">
                   {athletesList.length > 0 ? (
                     athletesList.map((athlete: any) => (
                       <div
                         key={athlete.id}
-                        className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
+                        className="flex flex-col md:flex-row md:items-center justify-between p-4 md:p-0 md:pb-4 gap-4 hover:bg-gray-50 md:hover:bg-transparent"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold uppercase overflow-hidden">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold uppercase overflow-hidden">
                             {athlete.avatar_url ? (
                               <img
                                 src={athlete.avatar_url}
@@ -194,9 +192,11 @@ export default async function DashboardPage() {
                               athlete.full_name.charAt(0)
                             )}
                           </div>
-                          <div>
-                            <p className="font-medium">{athlete.full_name}</p>
-                            <p className="text-sm text-gray-500">
+                          <div className="overflow-hidden">
+                            <p className="font-medium truncate">
+                              {athlete.full_name}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate">
                               {athlete.email}
                             </p>
                           </div>
@@ -205,7 +205,7 @@ export default async function DashboardPage() {
                           asChild
                           variant="outline"
                           size="sm"
-                          className="border-primary/20 text-primary hover:bg-primary/5"
+                          className="w-full md:w-auto border-primary/20 text-primary hover:bg-primary/5"
                         >
                           <Link href={`/dashboard/athletes/${athlete.id}`}>
                             Ver Detalhes
@@ -214,7 +214,7 @@ export default async function DashboardPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8">
+                    <div className="text-center py-8 px-4">
                       <p className="text-gray-500 mb-2">
                         Você ainda não tem atletas vinculados.
                       </p>
@@ -225,8 +225,8 @@ export default async function DashboardPage() {
             </Card>
           </div>
         ) : (
-          /* --- VISÃO DO ATLETA --- */
           <div className="space-y-6">
+            {/* Cards empilham automaticamente no mobile (grid-cols-1) */}
             <div className="grid gap-6 md:grid-cols-2">
               <Card
                 className={`shadow-sm ${
@@ -236,7 +236,7 @@ export default async function DashboardPage() {
                 }`}
               >
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     {workoutDoneToday ? (
                       <>
                         <CheckCircle2 className="h-6 w-6 text-green-600" />
@@ -256,8 +256,8 @@ export default async function DashboardPage() {
                   {activeProtocol ? (
                     workoutDoneToday ? (
                       <div className="space-y-2">
-                        <p className="text-green-700 font-medium">
-                          Parabéns! Você já realizou sua sessão de hoje.
+                        <p className="text-green-700 font-medium text-sm">
+                          Parabéns! Você já realizou sua sessão.
                         </p>
                         <Button
                           variant="outline"
@@ -270,7 +270,7 @@ export default async function DashboardPage() {
                     ) : (
                       <>
                         <div className="mb-4">
-                          <p className="text-lg font-semibold text-foreground">
+                          <p className="text-base md:text-lg font-semibold text-foreground line-clamp-1">
                             {activeProtocol.title}
                           </p>
                           <div className="mt-2 flex gap-2">
@@ -281,7 +281,7 @@ export default async function DashboardPage() {
                         </div>
                         <Button
                           asChild
-                          className="w-full gap-2 bg-primary hover:bg-primary/90"
+                          className="w-full gap-2 bg-primary hover:bg-primary/90 h-10 md:h-11 text-base"
                         >
                           <Link href="/dashboard/workout">
                             Iniciar Sessão <ArrowRight className="h-4 w-4" />
@@ -290,7 +290,7 @@ export default async function DashboardPage() {
                       </>
                     )
                   ) : (
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Nenhum treino ativo.
                     </p>
                   )}
@@ -299,19 +299,19 @@ export default async function DashboardPage() {
 
               <Card className="border-l-4 border-l-secondary shadow-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <Activity className="h-5 w-5 text-secondary" />
                     <span className="text-secondary">Como você está?</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="mb-4 text-sm text-muted-foreground">
-                    Registre seu nível de dor e recuperação diária.
+                    Registre seu nível de dor e recuperação.
                   </p>
                   <Button
                     asChild
                     variant="outline"
-                    className="w-full border-secondary text-secondary hover:bg-secondary hover:text-white transition-colors"
+                    className="w-full border-secondary text-secondary hover:bg-secondary hover:text-white transition-colors h-10 md:h-11 text-base"
                   >
                     <Link href="/dashboard/feedback">
                       <ClipboardList className="mr-2 h-4 w-4" /> Registrar
@@ -322,14 +322,16 @@ export default async function DashboardPage() {
               </Card>
             </div>
 
-            {/* NOVO: CALENDÁRIO NA TELA DO ATLETA */}
-            <div className="pt-6">
-              <FrequencyCalendar
-                dates={athleteDates}
-                startDate={
-                  activeProtocol?.start_date || new Date().toISOString()
-                }
-              />
+            {/* Container com scroll horizontal para calendário não quebrar em telas minúsculas */}
+            <div className="pt-4 overflow-x-auto pb-2">
+              <div className="min-w-[300px]">
+                <FrequencyCalendar
+                  dates={athleteDates}
+                  startDate={
+                    activeProtocol?.start_date || new Date().toISOString()
+                  }
+                />
+              </div>
             </div>
           </div>
         )}
