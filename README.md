@@ -85,9 +85,13 @@ O projeto foi construído com foco em performance, tipagem estática e component
 
     Aceda a `http://localhost:3000` no seu navegador.
 
+## 🤝 Autores e Colaboradores
+
+Este projeto foi desenvolvido com a colaboração técnica entre Engenharia de Software e Fisioterapia:
+
+* **[Willyan Gabriel](https://github.com/Willyang10x)** - *Desenvolvimento e Engenharia*
+* **[Ana](http://lattes.cnpq.br/2579677218357791)** - *Fisioterapeuta Parceira e Consultoria Técnica*
+
 ## 📝 Licença
 
 Este projeto está licenciado sob a Licença MIT - consulte o ficheiro [LICENSE](LICENSE) para mais detalhes.
-
----
-Feito por [Willyan Gabriel](https://github.com/Willyang10x)
