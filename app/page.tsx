@@ -2,25 +2,39 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Activity, BarChart3, MessageSquare, Bell } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image"; // Importante para o logo
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-16">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50/50 to-white">
+      <div className="container mx-auto px-4 py-12">
         {/* Hero Section */}
-        <div className="mb-20 text-center space-y-6">
-          <h1 className="text-6xl font-extrabold text-primary tracking-tight">
-            PhysioTrack
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <div className="mb-16 text-center space-y-4"> {/* Espaçamento compacto */}
+          
+          {/* LOGO: Tamanho médio (280px) e próximo do slogan */}
+          <div className="flex justify-center mb-2">
+            <div className="relative w-[280px] px-2">
+              <Image 
+                src="/logo-physio-track.png" 
+                alt="PhysioTrack Logo" 
+                width={280} 
+                height={100} 
+                priority
+                className="w-full h-auto object-contain"
+              />
+            </div>
+          </div>
+
+          <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-2xl mx-auto">
             Plataforma profissional para monitoramento de recuperação pós-lesão
             e alta performance.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 pt-4">
+          
+          <div className="flex flex-wrap justify-center gap-4 pt-6">
             <Button
               asChild
               size="lg"
-              className="text-lg px-8 bg-primary hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20"
+              className="h-12 px-8 text-lg bg-primary hover:bg-primary/90 font-bold shadow-lg shadow-primary/20 rounded-full"
             >
               <Link href="/auth/login">Acessar Sistema</Link>
             </Button>
@@ -28,7 +42,7 @@ export default function HomePage() {
               asChild
               size="lg"
               variant="outline"
-              className="text-lg px-8 border-primary text-primary hover:bg-primary/5"
+              className="h-12 px-8 text-lg border-2 border-primary text-primary hover:bg-primary/5 font-semibold rounded-full"
             >
               <Link href="/auth/sign-up">Criar Conta</Link>
             </Button>
@@ -36,7 +50,7 @@ export default function HomePage() {
         </div>
 
         {/* Cards de Features */}
-        <div className="mb-20 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-16 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="border-t-4 border-t-primary hover:shadow-lg transition-shadow bg-white/50 backdrop-blur-sm">
             <CardContent className="pt-6">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
@@ -95,12 +109,12 @@ export default function HomePage() {
         </div>
 
         {/* Como Funciona */}
-        <div className="rounded-2xl bg-white p-10 text-center shadow-sm border border-border">
-          <h2 className="mb-8 text-3xl font-bold text-primary">
+        <div className="rounded-2xl bg-white p-8 md:p-12 text-center shadow-lg border border-border/50">
+          <h2 className="mb-8 text-2xl md:text-3xl font-bold text-primary">
             Como Funciona
           </h2>
-          <div className="mx-auto max-w-3xl space-y-6 text-left">
-            <div className="flex gap-4 items-start">
+          <div className="mx-auto max-w-4xl space-y-6 text-left">
+            <div className="flex gap-4 items-start p-3 hover:bg-gray-50 rounded-lg transition-colors">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white font-bold shadow-md">
                 1
               </div>
@@ -113,7 +127,7 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="flex gap-4 items-start">
+            <div className="flex gap-4 items-start p-3 hover:bg-gray-50 rounded-lg transition-colors">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-white font-bold shadow-md">
                 2
               </div>
@@ -126,7 +140,7 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="flex gap-4 items-start">
+            <div className="flex gap-4 items-start p-3 hover:bg-gray-50 rounded-lg transition-colors">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white font-bold shadow-md">
                 3
               </div>
