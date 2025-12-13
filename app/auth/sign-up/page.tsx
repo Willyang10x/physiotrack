@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
+import Image from "next/image"; // Importante para o logo
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { LockKeyhole, UserPlus } from "lucide-react";
@@ -101,12 +102,22 @@ export default function SignUpPage() {
   };
 
   return (
-    // Fundo limpo (usa o do globals.css)
     <div className="flex min-h-screen w-full items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-primary">PhysioTrack</h1>
-          <p className="mt-2 text-muted-foreground">
+      <div className="w-full max-w-md space-y-6">
+        
+        {/* LOGO: Mesmo padrão do login (pequeno e perto) */}
+        <div className="flex flex-col items-center justify-center text-center">
+          <div className="relative w-[180px] h-auto">
+             <Image 
+              src="/logo-physio-track.png" 
+              alt="PhysioTrack" 
+              width={180} 
+              height={60} 
+              priority
+              className="w-full h-auto object-contain"
+            />
+          </div>
+          <p className="text-muted-foreground mt-2 text-sm">
             Crie sua conta para começar
           </p>
         </div>
