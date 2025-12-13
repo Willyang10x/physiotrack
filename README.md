@@ -1,4 +1,5 @@
-<img width="1229" height="446" alt="image" src="https://github.com/user-attachments/assets/2def62b8-d3cb-418f-9728-9b3592bae7e3" />
+<img width="1121" height="630" alt="image" src="https://github.com/user-attachments/assets/8bb730b8-c5fb-4840-9e1c-c0a75467469d" />
+
 
 # Physio Track 🏃‍♂️
 
