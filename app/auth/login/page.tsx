@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import Image from "next/image"; // Importante para o logo
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -43,22 +44,29 @@ export default function LoginPage() {
   };
 
   return (
-    // Removido o bg-gradient antigo para usar o fundo padrão do globals.css
-    <div className="flex min-h-screen w-full items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          {/* Título com a cor Primária */}
-          <h1 className="text-5xl font-extrabold tracking-tight text-primary">
-            PhysioTrack
-          </h1>
-          <p className="mt-2 text-muted-foreground">
+    <div className="flex min-h-screen w-full items-center justify-center p-6 bg-gray-50/30">
+      <div className="w-full max-w-md space-y-6">
+        
+        {/* LOGO: Tamanho reduzido e próximo do texto */}
+        <div className="flex flex-col items-center justify-center text-center">
+          <div className="relative w-[180px] h-auto"> {/* Tamanho controlado (180px) */}
+            <Image 
+              src="/logo-physio-track.png" 
+              alt="PhysioTrack" 
+              width={180} 
+              height={60} 
+              priority
+              className="w-full h-auto object-contain"
+            />
+          </div>
+          <p className="text-muted-foreground mt-2 text-sm"> {/* mt-2 cola o texto ao logo */}
             Monitoramento inteligente de reabilitação
           </p>
         </div>
 
         <Card className="border-t-4 border-t-primary shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl text-primary">
+            <CardTitle className="text-xl text-primary">
               Bem-vindo de volta
             </CardTitle>
             <CardDescription>
@@ -66,7 +74,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -107,7 +115,7 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2"
+                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold"
                 disabled={isLoading}
               >
                 {isLoading ? "Entrando..." : "Acessar Plataforma"}
