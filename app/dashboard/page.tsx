@@ -96,6 +96,7 @@ export default async function DashboardPage() {
                   <img
                     src={avatarUrl}
                     alt="Avatar"
+                    referrerPolicy="no-referrer"  // Adicione isso aqui
                     className="w-full h-full object-cover"
                   />
                 ) : (
