@@ -1,11 +1,28 @@
+import withPWAInit from "@ducanh2912/next-pwa";
+
+const withPWA = withPWAInit({
+  dest: "public",
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  swcMinify: true,
+  disable: process.env.NODE_ENV === "development", // Desativa em dev para não atrapalhar
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Se você tiver outras configurações (ex: imagens remotas), mantenha aqui
   images: {
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**", // Permite imagens de qualquer lugar (Google, Supabase, etc)
+      },
+    ],
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);
