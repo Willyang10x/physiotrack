@@ -16,19 +16,22 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
-  ],
+  maximumScale: 1, // Importante para PWA: impede zoom automático em inputs no iOS
+  userScalable: false, // Dá a sensação de "app nativo" (não permite pinça de zoom)
+  themeColor: "#2563eb", // Cor da barra de status do navegador no celular
 };
 
 export const metadata: Metadata = {
   title: "PhysioTrack - Monitoramento de Reabilitação",
   description: "Plataforma profissional para monitorar a recuperação pós-lesão de atletas",
+  manifest: "/manifest.json", // Link para o arquivo de configuração do PWA
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "PhysioTrack",
+  },
   icons: {
-    // Apontando para a versão retangular
+    // Seus ícones originais
     icon: "/FLAVICON-COM-RETANGULO-physio-track.png",
     apple: "/FLAVICON-COM-RETANGULO-physio-track.png",
     shortcut: "/FLAVICON-COM-RETANGULO-physio-track.png",
