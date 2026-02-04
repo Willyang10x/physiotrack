@@ -25,9 +25,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { FrequencyCalendar } from "@/components/FrequencyCalendar";
+// --- NOVO IMPORT DO BOTÃO PDF ---
+import { DownloadReportButton } from "@/components/DownloadReportButton";
 
 // --- FUNÇÃO PARA CORRIGIR O BUG DA MEIA-NOITE ---
-// Transforma "2025-12-05" direto em "05/12/2025" sem converter fuso horário
 function formatDate(dateString: string) {
   if (!dateString) return "-";
   const [year, month, day] = dateString.split("-");
@@ -71,15 +72,14 @@ export default function AthleteDetailsPage() {
         .select("*")
         .eq("athlete_id", athleteId)
         .order("date", { ascending: true })
-        .limit(14);
+        .limit(30); // Aumentei um pouco o limit para o relatório ficar melhor (era 14)
 
       const listData = [...(recentFeedback || [])].reverse();
       setFeedbacks(listData);
 
       if (recentFeedback) {
         const formatted = recentFeedback.map((f) => ({
-          // Formatação corrigida para o gráfico também
-          date: f.date.split("-").slice(1).reverse().join("/"), // Pega só dia/mês
+          date: f.date.split("-").slice(1).reverse().join("/"),
           dor: f.pain_level,
           fadiga: f.fatigue_level,
         }));
@@ -113,6 +113,13 @@ export default function AthleteDetailsPage() {
     }
   };
 
+  // Prepara os dados para o PDF
+  const reportData = {
+    athleteName: athlete?.full_name || "Atleta",
+    athleteEmail: athlete?.email || "",
+    feedbacks: feedbacks || [],
+  };
+
   if (loading)
     return (
       <div className="p-8 text-center text-muted-foreground">
@@ -129,25 +136,33 @@ export default function AthleteDetailsPage() {
   return (
     <div className="min-h-screen p-6 flex justify-center">
       <div className="w-full max-w-6xl space-y-6">
-        {/* Cabeçalho */}
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            className="text-primary hover:bg-primary/10"
-          >
-            <Link href="/dashboard">
-              <ArrowLeft className="h-6 w-6" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-primary">
-              {athlete.full_name}
-            </h1>
-            <p className="text-muted-foreground flex items-center gap-2">
-              <Activity className="h-4 w-4" /> Painel Clínico
-            </p>
+        
+        {/* Cabeçalho Ajustado com Flex-Between para o Botão */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="text-primary hover:bg-primary/10"
+            >
+              <Link href="/dashboard">
+                <ArrowLeft className="h-6 w-6" />
+              </Link>
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-primary">
+                {athlete.full_name}
+              </h1>
+              <p className="text-muted-foreground flex items-center gap-2">
+                <Activity className="h-4 w-4" /> Painel Clínico
+              </p>
+            </div>
+          </div>
+
+          {/* BOTÃO PDF AQUI */}
+          <div className="shrink-0">
+             <DownloadReportButton data={reportData} />
           </div>
         </div>
 
@@ -238,7 +253,7 @@ export default function AthleteDetailsPage() {
                 </CardContent>
               </Card>
 
-              {/* LISTA DE FEEDBACKS CORRIGIDA */}
+              {/* LISTA DE FEEDBACKS */}
               <Card className="border-t-4 border-t-secondary shadow-sm h-full">
                 <CardHeader>
                   <CardTitle className="text-secondary">
@@ -254,7 +269,6 @@ export default function AthleteDetailsPage() {
                         className="flex items-start justify-between border-b pb-3 last:border-0 hover:bg-muted/50 p-2 rounded-md transition-colors"
                       >
                         <div>
-                          {/* AQUI ESTÁ A CORREÇÃO PRINCIPAL: formatDate() */}
                           <p className="font-bold text-primary">
                             {formatDate(fb.date)}
                           </p>
