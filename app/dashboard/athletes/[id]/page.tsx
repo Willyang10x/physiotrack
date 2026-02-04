@@ -25,7 +25,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { FrequencyCalendar } from "@/components/FrequencyCalendar";
-// --- NOVO IMPORT DO BOTÃO PDF ---
+// Import do botão de PDF que criamos
 import { DownloadReportButton } from "@/components/DownloadReportButton";
 
 // --- FUNÇÃO PARA CORRIGIR O BUG DA MEIA-NOITE ---
@@ -72,7 +72,7 @@ export default function AthleteDetailsPage() {
         .select("*")
         .eq("athlete_id", athleteId)
         .order("date", { ascending: true })
-        .limit(30); // Aumentei um pouco o limit para o relatório ficar melhor (era 14)
+        .limit(30);
 
       const listData = [...(recentFeedback || [])].reverse();
       setFeedbacks(listData);
@@ -113,7 +113,7 @@ export default function AthleteDetailsPage() {
     }
   };
 
-  // Prepara os dados para o PDF
+  // Prepara dados para o PDF
   const reportData = {
     athleteName: athlete?.full_name || "Atleta",
     athleteEmail: athlete?.email || "",
@@ -137,7 +137,7 @@ export default function AthleteDetailsPage() {
     <div className="min-h-screen p-6 flex justify-center">
       <div className="w-full max-w-6xl space-y-6">
         
-        {/* Cabeçalho Ajustado com Flex-Between para o Botão */}
+        {/* Cabeçalho com Botão de Voltar e Botão de PDF */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button
@@ -160,7 +160,7 @@ export default function AthleteDetailsPage() {
             </div>
           </div>
 
-          {/* BOTÃO PDF AQUI */}
+          {/* --- BOTÃO DE PDF AQUI --- */}
           <div className="shrink-0">
              <DownloadReportButton data={reportData} />
           </div>
@@ -183,14 +183,15 @@ export default function AthleteDetailsPage() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6 mt-6">
-            {/* CALENDÁRIO COM DATA DE INÍCIO */}
+            {/* CALENDÁRIO */}
             <FrequencyCalendar
               dates={allDates}
               startDate={activeProtocol?.start_date || new Date().toISOString()}
             />
 
             <div className="grid gap-6 md:grid-cols-2">
-              {/* GRÁFICO */}
+              
+              {/* --- GRÁFICO (COM ID PARA O PRINT) --- */}
               <Card className="border-t-4 border-t-primary shadow-sm h-full">
                 <CardHeader>
                   <CardTitle className="text-primary">
@@ -198,59 +199,63 @@ export default function AthleteDetailsPage() {
                   </CardTitle>
                   <CardDescription>Dor vs Fadiga</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[300px] w-full">
-                  {chartData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={chartData}
-                        margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-                      >
-                        <CartesianGrid stroke="#e2e8f0" strokeDasharray="5 5" />
-                        <XAxis
-                          dataKey="date"
-                          fontSize={12}
-                          tickLine={false}
-                          axisLine={false}
-                          stroke="#64748b"
-                        />
-                        <YAxis
-                          domain={[0, 10]}
-                          fontSize={12}
-                          tickLine={false}
-                          axisLine={false}
-                          stroke="#64748b"
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: "12px",
-                            border: "none",
-                            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                          }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="dor"
-                          stroke="var(--destructive)"
-                          strokeWidth={3}
-                          name="Dor"
-                          dot={{ r: 4, fill: "var(--destructive)" }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="fadiga"
-                          stroke="var(--secondary)"
-                          strokeWidth={3}
-                          name="Fadiga"
-                          dot={{ r: 4, fill: "var(--secondary)" }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
-                      <p>Sem dados suficientes.</p>
-                    </div>
-                  )}
-                </CardContent>
+                
+                {/* ID IMPORTANTE AQUI EMBAIXO: "evolution-chart-print" */}
+                <div id="evolution-chart-print" className="bg-white p-2 rounded-lg">
+                  <CardContent className="h-[300px] w-full">
+                    {chartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={chartData}
+                          margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+                        >
+                          <CartesianGrid stroke="#e2e8f0" strokeDasharray="5 5" />
+                          <XAxis
+                            dataKey="date"
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                            stroke="#64748b"
+                          />
+                          <YAxis
+                            domain={[0, 10]}
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                            stroke="#64748b"
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              borderRadius: "12px",
+                              border: "none",
+                              boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="dor"
+                            stroke="var(--destructive)"
+                            strokeWidth={3}
+                            name="Dor"
+                            dot={{ r: 4, fill: "var(--destructive)" }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="fadiga"
+                            stroke="var(--secondary)"
+                            strokeWidth={3}
+                            name="Fadiga"
+                            dot={{ r: 4, fill: "var(--secondary)" }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+                        <p>Sem dados suficientes.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </div>
               </Card>
 
               {/* LISTA DE FEEDBACKS */}
