@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"; // Adicionei CardDescription
 import { Button } from "@/components/ui/button";
 import {
   Activity,
@@ -10,8 +10,11 @@ import {
   ClipboardList,
   Plus,
   CheckCircle2,
+  Bell, // Adicionei o ícone Bell
 } from "lucide-react";
 import { FrequencyCalendar } from "@/components/FrequencyCalendar";
+// --- IMPORT NOVO ---
+import { PushNotificationManager } from "@/components/PushNotificationManager";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -84,10 +87,8 @@ export default async function DashboardPage() {
   }
 
   return (
-    // AJUSTE 1: padding menor no mobile (p-4) e maior no desktop (md:p-8)
     <div className="min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-6xl">
-        {/* AJUSTE 2: Flex-col no mobile (empilhado) e Flex-row no desktop */}
         <header className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link href="/dashboard/profile">
@@ -96,7 +97,7 @@ export default async function DashboardPage() {
                   <img
                     src={avatarUrl}
                     alt="Avatar"
-                    referrerPolicy="no-referrer"  // Adicione isso aqui
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -133,6 +134,25 @@ export default async function DashboardPage() {
             </Button>
           </form>
         </header>
+
+        {/* --- AQUI ENTRA A SEÇÃO DE NOTIFICAÇÕES (NOVIDADE) --- */}
+        <div className="mb-8">
+           <Card className="border-l-4 border-l-primary shadow-sm bg-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                Configurar Notificações
+              </CardTitle>
+              <CardDescription>
+                Ative para saber quando houver atualizações no seu treino.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PushNotificationManager />
+            </CardContent>
+          </Card>
+        </div>
+        {/* --- FIM DA SEÇÃO DE NOTIFICAÇÕES --- */}
 
         {userRole === "therapist" ? (
           <div className="space-y-6">
