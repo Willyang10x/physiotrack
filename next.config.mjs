@@ -6,20 +6,21 @@ const withPWA = withPWAInit({
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   swcMinify: true,
-  disable: process.env.NODE_ENV === "development", // Desativa em dev para não atrapalhar
+  // --- MUDANÇA AQUI: Coloque false para testar o PWA agora ---
+  disable: false, 
   workboxOptions: {
     disableDevLogs: true,
+    importScripts: ["/sw-push.js"],
   },
 });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Se você tiver outras configurações (ex: imagens remotas), mantenha aqui
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**", // Permite imagens de qualquer lugar (Google, Supabase, etc)
+        hostname: "**", 
       },
     ],
   },

@@ -1,7 +1,7 @@
 {
   "name": "PhysioTrack",
   "short_name": "PhysioTrack",
-  "description": "Monitoramento inteligente de reabilitação",
+  "description": "Monitoramento de Reabilitação para Atletas e Fisioterapeutas",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,16 +9,14 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/FLAVICON-COM-RETANGULO-physio-track.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/FLAVICON-COM-RETANGULO-physio-track.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"
     }
   ]
 }
