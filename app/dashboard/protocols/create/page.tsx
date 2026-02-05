@@ -25,6 +25,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+// IMPORTANTE: Importamos a Server Action aqui
+import { createProtocolAction } from "@/app/actions/create-protocol";
 
 interface Exercise {
   name: string;
@@ -51,7 +53,7 @@ export default function CreateProtocolPage() {
   ]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null); // Para mostrar loading no exercício certo
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -95,7 +97,6 @@ export default function CreateProtocolPage() {
     setExercises(newExercises);
   };
 
-  // --- FUNÇÃO DE UPLOAD DE VÍDEO ---
   const handleFileUpload = async (
     index: number,
     e: React.ChangeEvent<HTMLInputElement>
@@ -103,70 +104,57 @@ export default function CreateProtocolPage() {
     if (!e.target.files || e.target.files.length === 0) return;
 
     const file = e.target.files[0];
-    setUploadingIndex(index); // Ativa o spinner nesse card
+    setUploadingIndex(index);
 
     try {
-      // 1. Gera um nome único para o arquivo (data atual + nome original limpo)
       const fileExt = file.name.split(".").pop();
       const fileName = `${Date.now()}-${Math.random()
         .toString(36)
         .substring(7)}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // 2. Sobe para o Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from("videos")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // 3. Pega o Link Público
       const {
         data: { publicUrl },
       } = supabase.storage.from("videos").getPublicUrl(filePath);
 
-      // 4. Salva o link no exercício
       updateExercise(index, "videoUrl", publicUrl);
     } catch (error: any) {
       alert("Erro ao enviar vídeo: " + error.message);
     } finally {
-      setUploadingIndex(null); // Desativa o spinner
+      setUploadingIndex(null);
     }
   };
 
+  // --- AQUI ESTÁ A MUDANÇA PRINCIPAL ---
   const handleSubmit = async () => {
     if (!selectedAthlete || !title) {
       alert("Preencha atleta e título.");
       return;
     }
+    
     setIsLoading(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
 
-    await supabase
-      .from("protocols")
-      .update({ status: "completed" })
-      .eq("athlete_id", selectedAthlete)
-      .eq("status", "active");
-
-    const { error } = await supabase.from("protocols").insert({
-      therapist_id: user.id,
+    // Chamamos a Server Action em vez de fazer o insert direto aqui
+    const result = await createProtocolAction({
       athlete_id: selectedAthlete,
       title,
       description,
-      exercises: exercises,
-      start_date: new Date().toISOString(),
-      status: "active",
+      exercises,
     });
 
-    if (error) {
-      alert("Erro: " + error.message);
+    if (!result.success) {
+      alert("Erro: " + result.error);
+      setIsLoading(false);
     } else {
+      // Sucesso! Redireciona
       router.push("/dashboard");
     }
-    setIsLoading(false);
   };
 
   return (
@@ -298,7 +286,6 @@ export default function CreateProtocolPage() {
                     />
                   </div>
 
-                  {/* ÁREA DE VÍDEO HÍBRIDA (LINK ou UPLOAD) */}
                   <div className="md:col-span-2 space-y-2">
                     <Label className="text-xs flex items-center gap-1">
                       <Youtube className="h-3 w-3 text-red-600" /> Vídeo
@@ -306,7 +293,6 @@ export default function CreateProtocolPage() {
                     </Label>
 
                     <div className="flex gap-2">
-                      {/* Input de Link (YouTube) */}
                       <Input
                         placeholder="Cole link do YouTube ou..."
                         value={exercise.videoUrl}
@@ -316,7 +302,6 @@ export default function CreateProtocolPage() {
                         className="flex-1"
                       />
 
-                      {/* Botão de Upload */}
                       <div className="relative">
                         <input
                           type="file"
@@ -356,7 +341,7 @@ export default function CreateProtocolPage() {
           onClick={handleSubmit}
           disabled={isLoading || uploadingIndex !== null}
         >
-          <Save className="mr-2 h-5 w-5" /> Salvar Protocolo
+          <Save className="mr-2 h-5 w-5" /> Salvar Protocolo e Notificar
         </Button>
       </div>
     </div>
