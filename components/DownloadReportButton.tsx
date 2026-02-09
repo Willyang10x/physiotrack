@@ -24,23 +24,23 @@ export function DownloadReportButton({ data }: { data: ReportData }) {
       // --- PÁGINA 1: TABELA E TEXTOS ---
       
       // Cabeçalho Azul
-      doc.setFillColor(37, 99, 235);
-      doc.rect(0, 0, 210, 20, "F");
+      doc.setFillColor(37, 99, 235); // Azul bonito
+      doc.rect(0, 0, 210, 24, "F"); // Aumentei um pouco a altura para 24
       
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
-      doc.text("PhysioTrack - Relatório de Evolução", 14, 13);
+      doc.text("PhysioTrack - Relatório de Evolução", 14, 15);
 
       // Dados do Paciente
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.text(`Paciente: ${data.athleteName}`, 14, 30);
-      doc.text(`Email: ${data.athleteEmail}`, 14, 36);
-      doc.text(`Data de Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 14, 42);
+      doc.text(`Paciente: ${data.athleteName}`, 14, 35);
+      doc.text(`Email: ${data.athleteEmail}`, 14, 41);
+      doc.text(`Data de Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 14, 47);
 
-      // Estatísticas
+      // Estatísticas Rápidas
       const totalSessoes = data.feedbacks.length;
       const mediaDor = totalSessoes > 0 
         ? (data.feedbacks.reduce((acc, curr) => acc + (curr.pain_level || 0), 0) / totalSessoes).toFixed(1)
@@ -48,51 +48,57 @@ export function DownloadReportButton({ data }: { data: ReportData }) {
       
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(`Total de Sessões: ${totalSessoes}`, 14, 52);
-      doc.text(`Média de Dor: ${mediaDor}/10`, 14, 58);
+      doc.text(`Total de Sessões: ${totalSessoes}`, 150, 35); // Alinhado à direita
+      doc.text(`Média de Dor: ${mediaDor}/10`, 150, 41);
 
       // Tabela
       const tableData = data.feedbacks.map((item) => [
-        new Date(item.date).toLocaleDateString("pt-BR"),
+        new Date(item.date).toLocaleDateString("pt-BR"), // Formata data
         item.pain_level + " / 10",
         item.fatigue_level + " / 10",
         item.notes || "-", 
       ]);
 
       autoTable(doc, {
-        startY: 65,
+        startY: 55,
         head: [["Data", "Dor", "Cansaço", "Observações"]],
         body: tableData,
         theme: "grid",
-        headStyles: { fillColor: [37, 99, 235] },
-        styles: { fontSize: 10 },
-        alternateRowStyles: { fillColor: [240, 240, 240] },
+        headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
+        styles: { fontSize: 10, cellPadding: 3 },
+        alternateRowStyles: { fillColor: [245, 247, 250] }, // Um cinza bem clarinho
       });
 
       // --- PÁGINA 2: O GRÁFICO ---
       
-      // 1. Procura o elemento HTML do gráfico pelo ID que vamos criar
       const chartElement = document.getElementById("evolution-chart-print");
 
       if (chartElement) {
-        // 2. Tira o print do elemento
-        const canvas = await html2canvas(chartElement, { scale: 2 }); // Scale 2 melhora a qualidade
+        // Tira o print do elemento
+        const canvas = await html2canvas(chartElement, { 
+            scale: 2,
+            backgroundColor: "#ffffff", // <--- IMPORTANTE: Garante fundo branco
+        }); 
+        
         const imgData = canvas.toDataURL("image/png");
         
-        // 3. Adiciona nova página e cola a imagem
+        // Adiciona nova página
         doc.addPage();
+        
+        // Título da página 2
         doc.setFontSize(14);
-        doc.setTextColor(0, 0, 0);
+        doc.setTextColor(37, 99, 235); // Azul do título
+        doc.setFont("helvetica", "bold");
         doc.text("Gráfico de Evolução Visual", 14, 20);
         
-        // Ajusta dimensões (A4 tem 210mm de largura. Deixamos margens)
+        // Ajusta dimensões
         const imgWidth = 180; 
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         
         doc.addImage(imgData, "PNG", 15, 30, imgWidth, imgHeight);
       }
 
-      // Rodapé em todas as páginas
+      // Rodapé em todas as páginas (Paginação)
       const pageCount = doc.getNumberOfPages();
       for(let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
@@ -109,7 +115,7 @@ export function DownloadReportButton({ data }: { data: ReportData }) {
       doc.save(`Relatorio_${data.athleteName.replace(/\s+/g, '_')}.pdf`);
     } catch (error) {
       console.error("Erro ao gerar PDF", error);
-      alert("Erro ao gerar o PDF com gráfico.");
+      alert("Erro ao gerar o PDF. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -123,7 +129,7 @@ export function DownloadReportButton({ data }: { data: ReportData }) {
       className="gap-2 border-primary/20 text-primary hover:bg-primary/5"
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-      {loading ? "Gerando..." : "Baixar Relatório Completo"}
+      {loading ? "Gerando..." : "Baixar Relatório"}
     </Button>
   );
 }
