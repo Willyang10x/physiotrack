@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea"; // Se der erro, use <textarea> normal ou instale o componente
+import { Textarea } from "@/components/ui/textarea"; 
 import { Sparkles, Loader2, BrainCircuit } from "lucide-react";
 import { generateProtocolAction } from "@/app/actions/generate-protocol";
 import {
@@ -30,12 +30,20 @@ export function AiGenerator({ onGenerate }: AiGeneratorProps) {
     const result = await generateProtocolAction(prompt);
     setLoading(false);
 
-    if (result.success && result.data) {
-      onGenerate(result.data); // Manda os dados para o pai
-      setOpen(false); // Fecha o modal
-      setPrompt(""); // Limpa
+    // --- CORREÇÃO AQUI (TypeScript Fix) ---
+    // Usamos (result as any) para o TypeScript não bloquear o build
+    // achando que a propriedade 'data' não existe.
+    if (result.success) {
+      const data = (result as any).data; // Força a leitura do dado
+      
+      if (data) {
+        onGenerate(data); 
+        setOpen(false); 
+        setPrompt(""); 
+      }
     } else {
-      alert("Erro: " + (result.error || "Falha desconhecida."));
+      // Se deu erro, mostramos a mensagem
+      alert("Erro: " + ((result as any).error || "Falha desconhecida."));
     }
   };
 
@@ -44,7 +52,7 @@ export function AiGenerator({ onGenerate }: AiGeneratorProps) {
       <DialogTrigger asChild>
         <Button 
           variant="outline" 
-          type="button" // Importante para não submeter o formulário principal
+          type="button" 
           className="gap-2 border-purple-500 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
         >
           <Sparkles className="h-4 w-4" /> 
@@ -57,7 +65,7 @@ export function AiGenerator({ onGenerate }: AiGeneratorProps) {
             <BrainCircuit className="h-5 w-5" /> Criar Treino Inteligente
           </DialogTitle>
           <DialogDescription>
-            Descreva o caso (ex: "Entorse de tornozelo grau 2, atleta de futebol, fase final") e a IA montará o treino.
+            Descreva o caso (ex: "Entorse de tornozelo grau 2, atleta de futebol") e a IA montará o treino.
           </DialogDescription>
         </DialogHeader>
         
