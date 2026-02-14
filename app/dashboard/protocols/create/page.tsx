@@ -25,8 +25,10 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-// IMPORTANTE: Importamos a Server Action aqui
+// Server Action
 import { createProtocolAction } from "@/app/actions/create-protocol";
+// Componente de IA
+import { AiGenerator } from "@/components/AiGenerator";
 
 interface Exercise {
   name: string;
@@ -74,6 +76,25 @@ export default function CreateProtocolPage() {
     }
     fetchAthletes();
   }, []);
+
+  // --- LÓGICA DA IA ---
+  const handleAiData = (data: any) => {
+    // 1. Preenche título e descrição
+    if (data.title) setTitle(data.title);
+    if (data.description) setDescription(data.description);
+
+    // 2. Preenche os exercícios
+    if (data.exercises && Array.isArray(data.exercises)) {
+      const aiExercises = data.exercises.map((ex: any) => ({
+        name: ex.name || "",
+        sets: String(ex.sets || ""), // Converte para string para não quebrar o input
+        reps: String(ex.reps || ""),
+        rest: String(ex.rest || ""),
+        videoUrl: "", // IA ainda não gera vídeo
+      }));
+      setExercises(aiExercises);
+    }
+  };
 
   const addExercise = () => {
     setExercises([
@@ -131,7 +152,6 @@ export default function CreateProtocolPage() {
     }
   };
 
-  // --- AQUI ESTÁ A MUDANÇA PRINCIPAL ---
   const handleSubmit = async () => {
     if (!selectedAthlete || !title) {
       alert("Preencha atleta e título.");
@@ -140,7 +160,6 @@ export default function CreateProtocolPage() {
     
     setIsLoading(true);
 
-    // Chamamos a Server Action em vez de fazer o insert direto aqui
     const result = await createProtocolAction({
       athlete_id: selectedAthlete,
       title,
@@ -152,7 +171,6 @@ export default function CreateProtocolPage() {
       alert("Erro: " + result.error);
       setIsLoading(false);
     } else {
-      // Sucesso! Redireciona
       router.push("/dashboard");
     }
   };
@@ -160,13 +178,20 @@ export default function CreateProtocolPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex justify-center">
       <div className="w-full max-w-3xl space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/dashboard">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <h1 className="text-2xl font-bold text-blue-900">Novo Protocolo</h1>
+        
+        {/* CABEÇALHO COM BOTÃO DA IA */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/dashboard">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <h1 className="text-2xl font-bold text-blue-900">Novo Protocolo</h1>
+          </div>
+
+          {/* Botão Mágico aqui na direita */}
+          <AiGenerator onGenerate={handleAiData} />
         </div>
 
         <Card>
@@ -341,7 +366,11 @@ export default function CreateProtocolPage() {
           onClick={handleSubmit}
           disabled={isLoading || uploadingIndex !== null}
         >
-          <Save className="mr-2 h-5 w-5" /> Salvar Protocolo e Notificar
+          {isLoading ? (
+             <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</>
+          ) : (
+             <><Save className="mr-2 h-5 w-5" /> Salvar Protocolo e Notificar</>
+          )}
         </Button>
       </div>
     </div>
