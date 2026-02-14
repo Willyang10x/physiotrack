@@ -25,9 +25,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-// Server Action
 import { createProtocolAction } from "@/app/actions/create-protocol";
-// Componente de IA
 import { AiGenerator } from "@/components/AiGenerator";
 
 interface Exercise {
@@ -77,24 +75,24 @@ export default function CreateProtocolPage() {
     fetchAthletes();
   }, []);
 
-  // --- LÓGICA DA IA ---
+  // --- CORREÇÃO AQUI ---
   const handleAiData = (data: any) => {
-    // 1. Preenche título e descrição
     if (data.title) setTitle(data.title);
     if (data.description) setDescription(data.description);
 
-    // 2. Preenche os exercícios
     if (data.exercises && Array.isArray(data.exercises)) {
       const aiExercises = data.exercises.map((ex: any) => ({
         name: ex.name || "",
-        sets: String(ex.sets || ""), // Converte para string para não quebrar o input
+        sets: String(ex.sets || ""),
         reps: String(ex.reps || ""),
         rest: String(ex.rest || ""),
-        videoUrl: "", // IA ainda não gera vídeo
+        // AGORA SIM: Pega o link gerado pela IA ou deixa vazio se não vier
+        videoUrl: ex.videoUrl || "", 
       }));
       setExercises(aiExercises);
     }
   };
+  // ---------------------
 
   const addExercise = () => {
     setExercises([
@@ -179,7 +177,6 @@ export default function CreateProtocolPage() {
     <div className="min-h-screen bg-gray-50 p-6 flex justify-center">
       <div className="w-full max-w-3xl space-y-6">
         
-        {/* CABEÇALHO COM BOTÃO DA IA */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
@@ -189,8 +186,6 @@ export default function CreateProtocolPage() {
             </Button>
             <h1 className="text-2xl font-bold text-blue-900">Novo Protocolo</h1>
           </div>
-
-          {/* Botão Mágico aqui na direita */}
           <AiGenerator onGenerate={handleAiData} />
         </div>
 
@@ -350,8 +345,7 @@ export default function CreateProtocolPage() {
                       </div>
                     </div>
                     <p className="text-[10px] text-gray-500">
-                      Cole um link ou clique no ícone de nuvem para subir um
-                      vídeo do seu dispositivo.
+                      A IA gera um link de busca automático. Se preferir, cole um vídeo específico.
                     </p>
                   </div>
                 </div>
