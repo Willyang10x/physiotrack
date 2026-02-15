@@ -6,7 +6,7 @@ import Image from "next/image"; // Importante para o logo
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50/50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-blue-50/50 to-white">
       <div className="container mx-auto px-4 py-12">
         {/* Hero Section */}
         <div className="mb-16 text-center space-y-4"> {/* Espaçamento compacto */}
