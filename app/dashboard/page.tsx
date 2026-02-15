@@ -1,7 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"; // Adicionei CardDescription
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Activity,
@@ -10,11 +16,11 @@ import {
   ClipboardList,
   Plus,
   CheckCircle2,
-  Bell, // Adicionei o ícone Bell
+  Bell,
 } from "lucide-react";
 import { FrequencyCalendar } from "@/components/FrequencyCalendar";
-// --- IMPORT NOVO ---
 import { PushNotificationManager } from "@/components/PushNotificationManager";
+import { StreakBadge } from "@/components/StreakBadge";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -110,10 +116,18 @@ export default async function DashboardPage() {
             </Link>
 
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-primary">
-                Olá, {firstName}
-              </h1>
-              <p className="text-sm md:text-base text-muted-foreground">
+              {/* --- ALTERAÇÃO AQUI: Foguinho ao lado do nome --- */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-primary">
+                  Olá, {firstName}
+                </h1>
+                {userRole === "athlete" && (
+                  <div className="scale-90 origin-left sm:scale-100">
+                    <StreakBadge />
+                  </div>
+                )}
+              </div>
+              <p className="text-sm md:text-base text-muted-foreground mt-1">
                 Painel do{" "}
                 {userRole === "therapist" ? "Fisioterapeuta" : "Atleta"}
               </p>
@@ -137,7 +151,7 @@ export default async function DashboardPage() {
 
         {/* --- AQUI ENTRA A SEÇÃO DE NOTIFICAÇÕES (NOVIDADE) --- */}
         <div className="mb-8">
-           <Card className="border-l-4 border-l-primary shadow-sm bg-white">
+          <Card className="border-l-4 border-l-primary shadow-sm bg-white">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Bell className="h-5 w-5 text-primary" />
