@@ -18,11 +18,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
 import { BodyChart } from "@/components/BodyChart";
+// --- MUDANÇA AQUI: Importando o SEU arquivo ---
+import { sendNotificationToUser } from "@/lib/notifications";
 
 export default function FeedbackPage() {
   const [painLevel, setPainLevel] = useState([0]);
   const [fatigueLevel, setFatigueLevel] = useState([0]);
-  const [mobilityRange, setMobilityRange] = useState([5]); // <--- NOVO ESTADO: Mobilidade
+  const [mobilityRange, setMobilityRange] = useState([5]); 
   const [notes, setNotes] = useState("");
   const [painLocations, setPainLocations] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,32 +39,35 @@ export default function FeedbackPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não logado");
 
-      // Busca protocolo ativo
+      // 1. Busca protocolo ativo e NOME do atleta
       const { data: protocol } = await supabase
         .from("protocols")
-        .select("id")
+        .select(`
+          id, 
+          therapist_id,
+          profiles:athlete_id (full_name) 
+        `)
         .eq("athlete_id", user.id)
         .eq("status", "active")
         .single();
 
       if (!protocol) {
-        alert("Você não tem um protocolo ativo para enviar feedback.");
+        alert("Você não tem um protocolo ativo.");
         setLoading(false);
         return;
       }
 
-      // Fuso Horário BR
       const now = new Date();
       const brazilTime = new Date(now.getTime() - 3 * 60 * 60 * 1000);
       const today = brazilTime.toISOString().split("T")[0];
 
-      // Salva no banco (Agora com pain, fatigue e mobility)
+      // 2. Salva no banco
       const { error } = await supabase.from("daily_feedback").insert({
         athlete_id: user.id,
         protocol_id: protocol.id,
         pain_level: painLevel[0],
         fatigue_level: fatigueLevel[0],
-        mobility_range: mobilityRange[0], // <--- CORREÇÃO AQUI
+        mobility_range: mobilityRange[0],
         notes,
         date: today,
         pain_location: painLocations,
@@ -70,8 +75,21 @@ export default function FeedbackPage() {
 
       if (error) throw error;
 
+      // 3. ENVIA NOTIFICAÇÃO (Usando a SUA função)
+      const athleteName = Array.isArray(protocol.profiles) 
+        ? protocol.profiles[0]?.full_name 
+        : (protocol.profiles as any)?.full_name || "Seu Atleta";
+
+      await sendNotificationToUser({
+        userId: protocol.therapist_id,
+        title: "Novo Feedback Diário 📝",
+        message: `${athleteName} registrou dor nível ${painLevel[0]} e fadiga ${fatigueLevel[0]}.`,
+        url: `/dashboard/athletes/${user.id}`
+      });
+
       router.push("/dashboard");
     } catch (error: any) {
+      console.error(error);
       alert("Erro ao enviar: " + error.message);
     } finally {
       setLoading(false);
@@ -105,10 +123,7 @@ export default function FeedbackPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-            {/* Coluna da Esquerda: Dados Numéricos */}
             <div className="space-y-6">
-                
-                {/* CARD DE DOR */}
                 <Card className="border-l-4 border-l-red-400">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-red-600">
@@ -121,21 +136,11 @@ export default function FeedbackPage() {
                         {painLevel[0]}
                       </span>
                     </div>
-                    <Slider
-                      value={painLevel}
-                      onValueChange={setPainLevel}
-                      max={10}
-                      step={1}
-                      className="cursor-pointer py-4"
-                    />
-                    <div className="flex justify-between text-xs text-gray-400 px-1">
-                      <span>Sem dor</span>
-                      <span>Extrema</span>
-                    </div>
+                    <Slider value={painLevel} onValueChange={setPainLevel} max={10} step={1} className="cursor-pointer py-4" />
+                    <div className="flex justify-between text-xs text-gray-400 px-1"><span>Sem dor</span><span>Extrema</span></div>
                   </CardContent>
                 </Card>
 
-                {/* CARD DE FADIGA */}
                 <Card className="border-l-4 border-l-orange-400">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-orange-600">
@@ -143,26 +148,12 @@ export default function FeedbackPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="text-center">
-                      <span className="text-4xl font-bold text-gray-700">
-                        {fatigueLevel[0]}
-                      </span>
-                    </div>
-                    <Slider
-                      value={fatigueLevel}
-                      onValueChange={setFatigueLevel}
-                      max={10}
-                      step={1}
-                      className="cursor-pointer py-4"
-                    />
-                    <div className="flex justify-between text-xs text-gray-400 px-1">
-                      <span>Descansado</span>
-                      <span>Exausto</span>
-                    </div>
+                    <div className="text-center"><span className="text-4xl font-bold text-gray-700">{fatigueLevel[0]}</span></div>
+                    <Slider value={fatigueLevel} onValueChange={setFatigueLevel} max={10} step={1} className="cursor-pointer py-4" />
+                    <div className="flex justify-between text-xs text-gray-400 px-1"><span>Descansado</span><span>Exausto</span></div>
                   </CardContent>
                 </Card>
 
-                {/* CARD DE MOBILIDADE - NOVO */}
                 <Card className="border-l-4 border-l-green-400">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-green-600">
@@ -170,28 +161,13 @@ export default function FeedbackPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="text-center">
-                      <span className={`text-4xl font-bold ${getMobilityColor(mobilityRange[0])}`}>
-                        {mobilityRange[0]}
-                      </span>
-                    </div>
-                    <Slider
-                      value={mobilityRange}
-                      onValueChange={setMobilityRange}
-                      max={10}
-                      step={1}
-                      className="cursor-pointer py-4"
-                    />
-                    <div className="flex justify-between text-xs text-gray-400 px-1">
-                      <span>Travado (Rigidez)</span>
-                      <span>Livre (Excelente)</span>
-                    </div>
+                    <div className="text-center"><span className={`text-4xl font-bold ${getMobilityColor(mobilityRange[0])}`}>{mobilityRange[0]}</span></div>
+                    <Slider value={mobilityRange} onValueChange={setMobilityRange} max={10} step={1} className="cursor-pointer py-4" />
+                    <div className="flex justify-between text-xs text-gray-400 px-1"><span>Travado</span><span>Livre</span></div>
                   </CardContent>
                 </Card>
-
             </div>
 
-            {/* Coluna da Direita: Mapa de Dor e Observações */}
             <div className="space-y-6">
                 <Card className="border-l-4 border-l-blue-400">
                     <CardHeader>
@@ -203,40 +179,21 @@ export default function FeedbackPage() {
                         <p className="text-sm text-gray-500 mb-4 text-center bg-blue-50 px-3 py-1 rounded-full">
                             Toque no corpo para marcar os locais de dor
                         </p>
-                        
-                        <BodyChart 
-                            onPartsChange={setPainLocations}
-                            selectedParts={painLocations}
-                        />
+                        <BodyChart onPartsChange={setPainLocations} selectedParts={painLocations} />
                     </CardContent>
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Observações (Opcional)</CardTitle>
-                  </CardHeader>
+                  <CardHeader><CardTitle>Observações (Opcional)</CardTitle></CardHeader>
                   <CardContent>
-                    <Textarea
-                      placeholder="Ex: Senti um estalo no joelho durante o agachamento..."
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      className="min-h-[80px]"
-                    />
+                    <Textarea placeholder="Observações..." value={notes} onChange={(e) => setNotes(e.target.value)} className="min-h-[80px]" />
                   </CardContent>
                 </Card>
             </div>
         </div>
 
-        <Button 
-          className="w-full h-14 text-lg font-bold shadow-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all hover:scale-[1.01] mt-8" 
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <><Loader2 className="mr-2 h-6 w-6 animate-spin" /> Salvando Feedback...</>
-          ) : (
-            <><Save className="mr-2 h-6 w-6" /> Enviar Relatório Diário</>
-          )}
+        <Button className="w-full h-14 text-lg font-bold shadow-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all hover:scale-[1.01] mt-8" onClick={handleSubmit} disabled={loading}>
+          {loading ? <><Loader2 className="mr-2 h-6 w-6 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-6 w-6" /> Enviar Relatório Diário</>}
         </Button>
       </div>
     </div>
