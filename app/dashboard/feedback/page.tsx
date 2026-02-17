@@ -1,122 +1,169 @@
 "use client";
 
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
+import { ArrowLeft, Save, Loader2, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
-// Importe a Action nova
-import { saveFeedbackAction } from "@/app/actions/save-feedback";
+import Link from "next/link";
+import { BodyChart } from "@/components/BodyChart"; // <--- Importamos o boneco
 
 export default function FeedbackPage() {
-  const [pain, setPain] = useState([0]);
-  const [fatigue, setFatigue] = useState([0]);
+  const [painLevel, setPainLevel] = useState([0]);
   const [notes, setNotes] = useState("");
+  const [painLocations, setPainLocations] = useState<string[]>([]); // Novo estado para locais
   const [loading, setLoading] = useState(false);
+  
   const router = useRouter();
+  const supabase = createClient();
 
   const handleSubmit = async () => {
     setLoading(true);
 
-    // Chamamos a Server Action
-    const result = await saveFeedbackAction({
-      pain: pain[0],
-      fatigue: fatigue[0],
-      notes: notes,
-    });
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não logado");
 
-    setLoading(false);
+      // Busca protocolo ativo
+      const { data: protocol } = await supabase
+        .from("protocols")
+        .select("id")
+        .eq("athlete_id", user.id)
+        .eq("status", "active")
+        .single();
 
-    if (!result.success) {
-      // Tratamento de erros vindo do servidor
-      alert(result.error);
-      if (result.error === "Você já enviou feedback hoje.") {
-        router.push("/dashboard");
+      if (!protocol) {
+        alert("Você não tem um protocolo ativo para enviar feedback.");
+        return;
       }
-    } else {
-      // Sucesso total
+
+      // Fuso Horário BR
+      const now = new Date();
+      const brazilTime = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+      const today = brazilTime.toISOString().split("T")[0];
+
+      // Salva no banco
+      const { error } = await supabase.from("daily_feedback").insert({
+        athlete_id: user.id,
+        protocol_id: protocol.id,
+        pain_level: painLevel[0],
+        notes,
+        date: today,
+        pain_location: painLocations, // <--- Salvando o array de locais
+      });
+
+      if (error) throw error;
+
       router.push("/dashboard");
+    } catch (error: any) {
+      alert("Erro ao enviar: " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const getPainColor = (level: number) => {
+    if (level <= 2) return "text-green-500";
+    if (level <= 5) return "text-yellow-500";
+    if (level <= 7) return "text-orange-500";
+    return "text-red-500 font-bold";
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
-      <Card className="w-full max-w-lg border-t-4 border-t-secondary shadow-sm">
-        <CardHeader>
-          <Button
-            variant="ghost"
-            className="w-fit pl-0 hover:bg-secondary/10 text-secondary"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+    <div className="min-h-screen bg-gray-50 p-4 flex justify-center items-center">
+      <div className="w-full max-w-2xl space-y-6">
+        
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/dashboard">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
           </Button>
-          <CardTitle className="text-secondary">Como você está hoje?</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          
-          {/* Slider de Dor */}
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <Label>Nível de Dor (0 a 10)</Label>
-              <span className="font-bold text-destructive text-lg">
-                {pain[0]}
-              </span>
+          <h1 className="text-2xl font-bold text-gray-800">Feedback Diário</h1>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+            {/* Coluna da Esquerda: Dados Numéricos */}
+            <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        Como está a dor hoje?
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="text-center">
+                      <span className={`text-5xl font-bold ${getPainColor(painLevel[0])}`}>
+                        {painLevel[0]}
+                      </span>
+                      <p className="text-sm text-gray-500 mt-2">de 0 a 10</p>
+                    </div>
+
+                    <Slider
+                      value={painLevel}
+                      onValueChange={setPainLevel}
+                      max={10}
+                      step={1}
+                      className="cursor-pointer"
+                    />
+                    
+                    <div className="flex justify-between text-xs text-gray-400 px-1">
+                      <span>Sem dor</span>
+                      <span>Insuportável</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Observações</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                      placeholder="Ex: Senti um incômodo no agachamento..."
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="min-h-[100px]"
+                    />
+                  </CardContent>
+                </Card>
             </div>
-            <input
-              type="range"
-              min="0"
-              max="10"
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-destructive"
-              value={pain[0]}
-              onChange={(e) => setPain([parseInt(e.target.value)])}
-            />
-          </div>
 
-          {/* Slider de Cansaço */}
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <Label>Nível de Cansaço (0 a 10)</Label>
-              <span className="font-bold text-secondary text-lg">
-                {fatigue[0]}
-              </span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="10"
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              value={fatigue[0]}
-              onChange={(e) => setFatigue([parseInt(e.target.value)])}
-            />
-          </div>
+            {/* Coluna da Direita: Mapa de Dor */}
+            <Card className="border-l-4 border-l-blue-400">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                        <Info className="h-4 w-4 text-blue-500"/> Onde dói?
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-xs text-gray-500 mb-4 text-center">
+                        Toque nas partes do corpo para marcar.
+                    </p>
+                    <BodyChart 
+                        onPartsChange={setPainLocations}
+                        selectedParts={painLocations}
+                    />
+                </CardContent>
+            </Card>
+        </div>
 
-          {/* Notas */}
-          <div className="space-y-2">
-            <Label>Observações (Opcional)</Label>
-            <Textarea
-              placeholder="Senti um incômodo no terceiro exercício..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="focus-visible:ring-secondary"
-            />
-          </div>
-
-          {/* Botão de Enviar */}
-          <Button
-            className="w-full bg-secondary hover:bg-secondary/90 text-white font-bold"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
-            ) : (
-              "Enviar Feedback"
-            )}
-          </Button>
-        </CardContent>
-      </Card>
+        <Button 
+          className="w-full h-12 text-lg shadow-lg bg-blue-600 hover:bg-blue-700 text-white" 
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Salvando...</>
+          ) : (
+            <><Save className="mr-2 h-5 w-5" /> Enviar Relatório</>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }
