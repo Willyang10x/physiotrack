@@ -1,3 +1,5 @@
+"use server";
+
 import { createClient } from "@/lib/supabase/server";
 import * as webPush from "web-push";
 
