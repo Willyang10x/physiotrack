@@ -159,7 +159,7 @@ export function Sidebar() {
         
         <div className="text-center pt-2">
           <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">
-            {userRole === 'therapist' ? 'Modo Terapeuta' : 'Modo Atleta'}
+            {userRole === 'therapist' ? 'Modo Fisioterapeuta' : 'Modo Atleta'}
           </p>
         </div>
       </div>
