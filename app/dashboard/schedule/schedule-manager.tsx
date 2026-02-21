@@ -25,6 +25,11 @@ export function ScheduleManager({ appointments, isTherapist, userId }: { appoint
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // --- MÁGICA 1: Encontra os dias que têm horários livres
+  const availableDates = appointments
+    .filter(app => app.status === 'available')
+    .map(app => new Date(app.start_time));
+
   // Filtra os horários para o dia selecionado
   const dailySlots = appointments.filter(app => {
     if (!date) return false;
@@ -94,6 +99,14 @@ export function ScheduleManager({ appointments, isTherapist, userId }: { appoint
           onSelect={setDate}
           locale={ptBR}
           className="rounded-md border mx-auto"
+          // --- MÁGICA 2: Desenha as bolinhas no calendário ---
+          modifiers={{ 
+            hasSlot: availableDates 
+          }}
+          modifiersClassNames={{
+            hasSlot: "relative font-bold text-blue-600 after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-blue-600 after:rounded-full"
+          }}
+          // ----------------------------------------------------
         />
       </div>
 
@@ -146,12 +159,12 @@ export function ScheduleManager({ appointments, isTherapist, userId }: { appoint
                   const isMyBooking = slot.athlete_id === userId;
 
                   return (
-                    <div key={slot.id} className={`flex items-center justify-between p-4 rounded-xl border ${slot.status === 'booked' ? 'bg-blue-50 border-blue-200' : 'bg-white shadow-sm'}`}>
+                    <div key={slot.id} className={`flex items-center justify-between p-4 rounded-xl border ${slot.status === 'booked' ? 'bg-blue-50 border-blue-200' : 'bg-white shadow-sm transition-hover hover:border-gray-300'}`}>
                       <div className="flex items-center gap-4">
                         <span className="font-bold text-2xl text-gray-800">{timeLabel}</span>
-                        {slot.status === 'available' && <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold uppercase">Livre</span>}
+                        {slot.status === 'available' && <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold uppercase tracking-wider">Livre</span>}
                         {slot.status === 'booked' && (
-                          <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold uppercase">
+                          <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
                             {isTherapist ? `Reservado: ${slot.profiles?.full_name?.split(' ')[0]}` : (isMyBooking ? "SEU AGENDAMENTO" : "OCUPADO")}
                           </span>
                         )}
@@ -164,7 +177,7 @@ export function ScheduleManager({ appointments, isTherapist, userId }: { appoint
                           </Button>
                         )}
                         {!isTherapist && slot.status === 'available' && (
-                          <Button onClick={() => handleBook(slot.id)} disabled={loading}>Reservar</Button>
+                          <Button onClick={() => handleBook(slot.id)} disabled={loading} className="font-bold shadow-sm">Reservar</Button>
                         )}
                         {!isTherapist && isMyBooking && (
                           <div className="flex items-center text-blue-600 gap-1.5 text-sm font-bold bg-blue-100 px-3 py-1.5 rounded-full">
