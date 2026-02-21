@@ -1,8 +1,8 @@
+export const dynamic = "force-dynamic";
+
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Calendar } from "@/components/ui/calendar"; // Componente padrão do Shadcn
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScheduleManager } from "./schedule-manager"; // Vamos criar esse componente cliente abaixo
+import { ScheduleManager } from "./schedule-manager";
 
 export default async function SchedulePage() {
   const supabase = await createClient();
@@ -10,7 +10,6 @@ export default async function SchedulePage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  // Pega perfil para saber se é fisio ou atleta
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, assigned_therapist_id")
@@ -18,31 +17,42 @@ export default async function SchedulePage() {
     .single();
 
   const isTherapist = profile?.role === "therapist";
-  
-  // Se for atleta, precisamos buscar a agenda do SEU fisio. Se for fisio, busca a SUA.
   const targetTherapistId = isTherapist ? user.id : profile?.assigned_therapist_id;
 
   if (!targetTherapistId && !isTherapist) {
-    return <div className="p-8">Você ainda não tem um fisioterapeuta vinculado.</div>;
+    return (
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center">
+          <p className="text-gray-500 font-medium">Você ainda não tem um fisioterapeuta vinculado.</p>
+        </div>
+      </div>
+    );
   }
 
-  // Busca todos os agendamentos futuros
-  const { data: appointments } = await supabase
+  // Busca apenas de HOJE em diante
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const { data: appointments, error } = await supabase
     .from("appointments")
     .select("*, profiles:athlete_id(full_name)")
     .eq("therapist_id", targetTherapistId)
-    .gte("start_time", new Date().toISOString()) // Apenas futuros
+    .gte("start_time", startOfToday.toISOString()) // <-- Voltou essa linha!
     .order("start_time", { ascending: true });
 
+  // SE DER ERRO NO BANCO, AGORA ELE GRITA NO SEU TERMINAL DO VSCODE
+  if (error) {
+    console.error("🚨 ERRO GRAVE NO SUPABASE:", error.message);
+  }
+
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-5xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold text-gray-800">
           {isTherapist ? "Gerenciar Minha Agenda" : "Agendar Consulta"}
         </h1>
         
-        <div className="grid md:grid-cols-[300px_1fr] gap-8">
-          {/* Componente Cliente que gerencia a interação */}
+        <div className="grid md:grid-cols-[350px_1fr] gap-6 items-start">
           <ScheduleManager 
             appointments={appointments || []} 
             isTherapist={isTherapist} 
