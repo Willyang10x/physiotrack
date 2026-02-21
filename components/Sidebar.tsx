@@ -12,7 +12,8 @@ import {
   LogOut,
   Dumbbell,
   FileText,
-  Loader2
+  Loader2,
+  CalendarDays // <-- Ícone novo adicionado aqui
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstallPWA } from "@/components/InstallPWA";
@@ -36,6 +37,12 @@ const menuItems = [
     label: "Criar Treino", 
     icon: Dumbbell,
     allowedRoles: ["therapist"] 
+  },
+  { 
+    href: "/dashboard/schedule", 
+    label: "Agendamentos", 
+    icon: CalendarDays,
+    allowedRoles: ["therapist", "athlete"] // <-- Adicionado e liberado para os dois!
   },
   { 
     href: "/dashboard/feedback", 
