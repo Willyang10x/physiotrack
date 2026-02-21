@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
-  Users,
   User,
   LogOut,
   Dumbbell,
@@ -25,12 +24,6 @@ const menuItems = [
     label: "Visão Geral", 
     icon: LayoutDashboard,
     allowedRoles: ["therapist", "athlete"] 
-  },
-  { 
-    href: "/dashboard/athletes", 
-    label: "Meus Atletas", 
-    icon: Users,
-    allowedRoles: ["therapist"] 
   },
   { 
     href: "/dashboard/protocols/create", 
