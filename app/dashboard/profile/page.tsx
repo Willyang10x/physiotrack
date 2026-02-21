@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea"; // <-- Importado o Textarea
 import { ArrowLeft, Camera, Loader2, Save, User, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -20,6 +21,11 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>("");
+  
+  // Novos estados para o Fisioterapeuta
+  const [bio, setBio] = useState("");
+  const [crefito, setCrefito] = useState("");
+  
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -41,8 +47,10 @@ export default function ProfilePage() {
 
       if (data) {
         setProfile(data);
-        setFullName(data.full_name);
-        setAvatarUrl(data.avatar_url);
+        setFullName(data.full_name || "");
+        setAvatarUrl(data.avatar_url || null);
+        setBio(data.bio || ""); // Carrega a bio
+        setCrefito(data.crefito || ""); // Carrega o crefito
       }
       setLoading(false);
     }
@@ -82,14 +90,12 @@ export default function ProfilePage() {
     }
   };
 
-  // --- NOVA FUNÇÃO: REMOVER FOTO ---
   const handleRemovePhoto = async () => {
     if (!confirm("Tem certeza que deseja remover sua foto de perfil?")) return;
 
     try {
       setUploading(true);
 
-      // Atualiza o banco definindo avatar_url como NULL
       const { error } = await supabase
         .from("profiles")
         .update({ avatar_url: null })
@@ -97,7 +103,7 @@ export default function ProfilePage() {
 
       if (error) throw error;
 
-      setAvatarUrl(null); // Limpa visualmente
+      setAvatarUrl(null);
       alert("Foto removida com sucesso!");
       router.refresh();
     } catch (error: any) {
@@ -113,7 +119,9 @@ export default function ProfilePage() {
         .from("profiles")
         .update({
           full_name: fullName,
-          avatar_url: avatarUrl, // Salva a URL nova (ou null)
+          avatar_url: avatarUrl,
+          bio: bio, // Salva a nova bio
+          crefito: crefito, // Salva o novo crefito
           updated_at: new Date().toISOString(),
         })
         .eq("id", profile.id);
@@ -131,6 +139,8 @@ export default function ProfilePage() {
     return (
       <div className="p-8 text-center text-primary">Carregando perfil...</div>
     );
+
+  const isTherapist = profile?.role === "therapist";
 
   return (
     <div className="min-h-screen p-6 flex justify-center items-center">
@@ -166,7 +176,7 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* Overlay de Upload (Só aparece se passar o mouse) */}
+                {/* Overlay de Upload */}
                 <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                   {uploading ? (
                     <Loader2 className="h-8 w-8 text-white animate-spin" />
@@ -186,7 +196,7 @@ export default function ProfilePage() {
                 </label>
               </div>
 
-              {/* BOTÃO DE REMOVER (Só aparece se tiver foto) */}
+              {/* BOTÃO DE REMOVER */}
               {avatarUrl && (
                 <Button
                   variant="destructive"
@@ -202,7 +212,7 @@ export default function ProfilePage() {
 
             <CardTitle className="text-primary">{profile.email}</CardTitle>
             <CardDescription className="capitalize text-secondary font-medium">
-              {profile.role === "therapist" ? "Fisioterapeuta" : "Atleta"}
+              {isTherapist ? "Fisioterapeuta" : "Atleta"}
             </CardDescription>
           </CardHeader>
 
@@ -216,6 +226,31 @@ export default function ProfilePage() {
               />
             </div>
 
+            {/* CAMPOS EXCLUSIVOS DO FISIOTERAPEUTA */}
+            {isTherapist && (
+              <>
+                <div className="grid gap-2">
+                  <Label>Registro (CREFITO)</Label>
+                  <Input
+                    value={crefito}
+                    onChange={(e) => setCrefito(e.target.value)}
+                    placeholder="Ex: 123456-F"
+                    className="focus-visible:ring-primary"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Biografia</Label>
+                  <Textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Fale um pouco sobre sua especialidade, experiência e métodos de trabalho..."
+                    className="focus-visible:ring-primary min-h-[100px] resize-y"
+                  />
+                </div>
+              </>
+            )}
+
             <div className="grid gap-2">
               <Label>ID do Sistema</Label>
               <div className="p-3 bg-muted rounded-md text-xs font-mono text-muted-foreground break-all border border-border">
@@ -228,7 +263,8 @@ export default function ProfilePage() {
               onClick={handleSave}
               disabled={uploading}
             >
-              <Save className="mr-2 h-5 w-5" /> Salvar Alterações
+              {uploading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
+              Salvar Alterações
             </Button>
           </CardContent>
         </Card>
