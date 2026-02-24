@@ -13,7 +13,8 @@ import {
   FileText,
   Loader2,
   CalendarDays,
-  Users // <-- Ícone importado aqui
+  Users,
+  Library // <-- Ícone importado para a Biblioteca
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstallPWA } from "@/components/InstallPWA";
@@ -30,13 +31,19 @@ const menuItems = [
     href: "/dashboard/athletes", 
     label: "Meus Atletas", 
     icon: Users,
-    allowedRoles: ["therapist"] // <-- Adicionado e visível só para o Fisio
+    allowedRoles: ["therapist"] 
   },
   { 
     href: "/dashboard/protocols/create", 
     label: "Criar Treino", 
     icon: Dumbbell,
     allowedRoles: ["therapist"] 
+  },
+  { 
+    href: "/dashboard/exercises", 
+    label: "Biblioteca de Exer.", 
+    icon: Library,
+    allowedRoles: ["therapist"] // <-- Adicionado e visível só para o Fisio
   },
   { 
     href: "/dashboard/schedule", 
