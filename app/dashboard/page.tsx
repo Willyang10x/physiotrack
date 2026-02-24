@@ -481,7 +481,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* CARD DE FEEDBACK TURBINADO */}
-            <Card className="shadow-sm bg-gradient-to-r from-primary to-[#015a8f] text-white">
+            <Card className="shadow-sm bg-linear-to-r from-primary to-[#015a8f] text-white">
               <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
                   <h3 className="text-2xl font-bold">Como você está se sentindo hoje?</h3>
