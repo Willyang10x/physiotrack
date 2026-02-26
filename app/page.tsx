@@ -6,8 +6,9 @@ import Image from "next/image";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-linear-to-b from-blue-50/50 to-white">
-      <div className="container mx-auto px-4 py-12">
+    <div className="min-h-screen flex flex-col bg-linear-to-b from-blue-50/50 to-white">
+      {/* --- CONTEÚDO PRINCIPAL --- */}
+      <main className="flex-1 container mx-auto px-4 py-12">
         
         {/* --- HERO SECTION ORIGINAL --- */}
         <div className="mb-16 text-center space-y-4"> 
@@ -27,7 +28,7 @@ export default function HomePage() {
           </div>
 
           <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-2xl mx-auto">
-            Plataforma profissional para monitoramento de recuperação pós-lesão
+            Plataforma profissional para monitorização de recuperação pós-lesão
             e alta performance.
           </p>
           
@@ -50,7 +51,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* --- CARDS DE FEATURES (Seu estilo, novas funcionalidades) --- */}
+        {/* --- CARDS DE FEATURES --- */}
         <div className="mb-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="border-t-4 border-t-primary hover:shadow-lg transition-shadow bg-white/50 backdrop-blur-sm">
             <CardContent className="pt-6">
@@ -75,7 +76,7 @@ export default function HomePage() {
                 Agenda Inteligente
               </h3>
               <p className="text-sm text-muted-foreground">
-                Disponibilize seus horários. O atleta agenda e você recebe notificação push.
+                Disponibilize os seus horários. O atleta agenda e você recebe notificação push.
               </p>
             </CardContent>
           </Card>
@@ -103,7 +104,7 @@ export default function HomePage() {
                 Biblioteca de Exercícios
               </h3>
               <p className="text-sm text-muted-foreground">
-                Salve seus exercícios favoritos e puxe-os com um clique ao montar um protocolo.
+                Guarde os seus exercícios favoritos e adicione-os com um clique ao montar um protocolo.
               </p>
             </CardContent>
           </Card>
@@ -114,7 +115,7 @@ export default function HomePage() {
                 <FileText className="h-6 w-6 text-primary" />
               </div>
               <h3 className="mb-2 text-lg font-semibold text-primary">
-                Prontuário Eletrônico
+                Prontuário Eletrónico
               </h3>
               <p className="text-sm text-muted-foreground">
                 Anote a evolução da sessão de forma segura e privada no perfil do atleta.
@@ -137,8 +138,8 @@ export default function HomePage() {
           </Card>
         </div>
 
-        {/* --- COMO FUNCIONA ORIGINAL --- */}
-        <div className="rounded-2xl bg-white p-8 md:p-12 text-center shadow-lg border border-border/50">
+        {/* --- COMO FUNCIONA --- */}
+        <div className="rounded-2xl bg-white p-8 md:p-12 text-center shadow-lg border border-border/50 mb-12">
           <h2 className="mb-8 text-2xl md:text-3xl font-bold text-primary">
             Como Funciona
           </h2>
@@ -162,7 +163,7 @@ export default function HomePage() {
               </div>
               <div>
                 <h3 className="mb-1 font-semibold text-lg text-secondary">
-                  Execução e Registro
+                  Execução e Registo
                 </h3>
                 <p className="text-muted-foreground">
                   O Atleta realiza o treino e informa o nível de dor e cansaço.
@@ -185,7 +186,32 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* --- RODAPÉ COM LOGÓTIPO --- */}
+      <footer className="bg-white border-t border-gray-200 py-8 mt-auto">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-4">
+          
+          {/* LOGO NO RODAPÉ */}
+          <div className="relative w-[180px] h-[45px]">
+            <Image 
+              src="/logo-physio-track.png" 
+              alt="PhysioTrack Logo" 
+              fill
+              className="object-contain object-center md:object-left opacity-90 hover:opacity-100 transition-opacity"
+            />
+          </div>
+          
+          <p className="text-sm text-muted-foreground text-center md:text-left">
+            © {new Date().getFullYear()} Physio Track. Todos os direitos reservados.
+          </p>
+          
+          <div className="flex gap-6 text-sm text-muted-foreground">
+            <Link href="#" className="hover:text-primary transition-colors">Termos de Uso</Link>
+            <Link href="#" className="hover:text-primary transition-colors">Privacidade</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
