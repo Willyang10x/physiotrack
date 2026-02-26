@@ -19,21 +19,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
-import Image from "next/image"; // Importante para o logo
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { LockKeyhole, UserPlus } from "lucide-react";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { LockKeyhole, UserPlus, Link as LinkIcon, CheckCircle2 } from "lucide-react";
 
-export default function SignUpPage() {
+// O formulário precisa ser separado para podermos usar o useSearchParams com Suspense
+function SignUpForm() {
+  const searchParams = useSearchParams();
+  const inviteTherapistId = searchParams.get("therapist");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<"therapist" | "athlete">("athlete");
+  
+  // Se vier com o ID no link, força a ser Atleta
+  const [role, setRole] = useState<"therapist" | "athlete">(inviteTherapistId ? "athlete" : "athlete");
 
   const [accessCode, setAccessCode] = useState("");
-  const [selectedTherapistId, setSelectedTherapistId] = useState("");
+  // Se vier com o ID no link, já preenche o Fisio
+  const [selectedTherapistId, setSelectedTherapistId] = useState(inviteTherapistId || "");
   const [therapistsList, setTherapistsList] = useState<any[]>([]);
+  const [invitedByName, setInvitedByName] = useState("");
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,10 +57,17 @@ export default function SignUpPage() {
         .select("id, full_name")
         .eq("role", "therapist");
 
-      if (data) setTherapistsList(data);
+      if (data) {
+        setTherapistsList(data);
+        // Se foi convidado, pega o nome do Fisio para mostrar uma mensagem bonita
+        if (inviteTherapistId) {
+          const fisio = data.find(t => t.id === inviteTherapistId);
+          if (fisio) setInvitedByName(fisio.full_name);
+        }
+      }
     }
     loadTherapists();
-  }, []);
+  }, [inviteTherapistId, supabase]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,9 +120,8 @@ export default function SignUpPage() {
     <div className="flex min-h-screen w-full items-center justify-center p-6">
       <div className="w-full max-w-md space-y-6">
         
-        {/* LOGO: Mesmo padrão do login (pequeno e perto) */}
         <div className="flex flex-col items-center justify-center text-center">
-          <div className="relative w-[180px] h-auto">
+          <div className="relative w-[180px] h-auto mb-2">
              <Image 
               src="/logo-physio-track.png" 
               alt="PhysioTrack" 
@@ -117,9 +131,14 @@ export default function SignUpPage() {
               className="w-full h-auto object-contain"
             />
           </div>
-          <p className="text-muted-foreground mt-2 text-sm">
-            Crie sua conta para começar
-          </p>
+          {/* MENSAGEM MÁGICA DE CONVITE */}
+          {invitedByName ? (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 mt-2 shadow-sm">
+              <CheckCircle2 className="w-4 h-4" /> Você foi convidado por {invitedByName}
+            </div>
+          ) : (
+            <p className="text-muted-foreground mt-2 text-sm">Crie sua conta para começar</p>
+          )}
         </div>
 
         <Card className="border-t-4 border-t-primary shadow-lg">
@@ -136,7 +155,7 @@ export default function SignUpPage() {
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="focus-visible:ring-primary"
+                  className="focus-visible:ring-primary bg-white"
                 />
               </div>
               <div className="grid gap-2">
@@ -147,29 +166,30 @@ export default function SignUpPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="focus-visible:ring-primary"
+                  className="focus-visible:ring-primary bg-white"
                 />
               </div>
 
-              <div className="grid gap-2">
-                <Label>Eu sou...</Label>
-                <Select
-                  value={role}
-                  onValueChange={(v) => setRole(v as "therapist" | "athlete")}
-                >
-                  <SelectTrigger className="focus:ring-primary">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="athlete">Atleta (Paciente)</SelectItem>
-                    <SelectItem value="therapist">
-                      Fisioterapeuta (Profissional)
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Esconde a seleção de cargo se ele veio por link de convite */}
+              {!inviteTherapistId && (
+                <div className="grid gap-2">
+                  <Label>Eu sou...</Label>
+                  <Select
+                    value={role}
+                    onValueChange={(v) => setRole(v as "therapist" | "athlete")}
+                  >
+                    <SelectTrigger className="focus:ring-primary bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="athlete">Atleta (Paciente)</SelectItem>
+                      <SelectItem value="therapist">Fisioterapeuta (Profissional)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-              {role === "therapist" && (
+              {role === "therapist" && !inviteTherapistId && (
                 <div className="grid gap-2 p-3 bg-primary/5 border border-primary/20 rounded-md animate-in fade-in slide-in-from-top-2">
                   <Label className="flex items-center gap-2 text-primary font-semibold">
                     <LockKeyhole className="h-4 w-4" /> Código da Clínica
@@ -193,8 +213,9 @@ export default function SignUpPage() {
                   <Select
                     onValueChange={setSelectedTherapistId}
                     value={selectedTherapistId}
+                    disabled={!!inviteTherapistId} // Trava se veio por convite
                   >
-                    <SelectTrigger className="bg-white border-secondary/30 focus:ring-secondary">
+                    <SelectTrigger className="bg-white border-secondary/30 focus:ring-secondary disabled:opacity-100 disabled:bg-gray-50">
                       <SelectValue placeholder="Selecione na lista..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -205,15 +226,14 @@ export default function SignUpPage() {
                           </SelectItem>
                         ))
                       ) : (
-                        <div className="p-2 text-sm text-gray-500 text-center">
-                          Nenhum fisio encontrado
-                        </div>
+                        <div className="p-2 text-sm text-gray-500 text-center">Nenhum fisio encontrado</div>
                       )}
                     </SelectContent>
                   </Select>
-                  <p className="text-[10px] text-secondary">
-                    Selecione o profissional que vai acompanhar você.
-                  </p>
+                  
+                  {!inviteTherapistId && (
+                    <p className="text-[10px] text-secondary">Selecione o profissional que vai acompanhar você.</p>
+                  )}
                 </div>
               )}
 
@@ -224,7 +244,7 @@ export default function SignUpPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="focus-visible:ring-primary"
+                  className="focus-visible:ring-primary bg-white"
                 />
               </div>
               <div className="grid gap-2">
@@ -234,7 +254,7 @@ export default function SignUpPage() {
                   required
                   value={repeatPassword}
                   onChange={(e) => setRepeatPassword(e.target.value)}
-                  className="focus-visible:ring-primary"
+                  className="focus-visible:ring-primary bg-white"
                 />
               </div>
 
@@ -246,7 +266,7 @@ export default function SignUpPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-white font-bold"
+                className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-11"
                 disabled={isLoading}
               >
                 {isLoading ? "Criando conta..." : "Criar Conta"}
@@ -265,5 +285,14 @@ export default function SignUpPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// O Suspense é obrigatório no Next.js ao usar useSearchParams()
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-primary">Carregando...</div>}>
+      <SignUpForm />
+    </Suspense>
   );
 }
