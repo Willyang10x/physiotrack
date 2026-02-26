@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, ArrowRight, Activity, Search } from "lucide-react";
+// IMPORTA O NOSSO BOTÃO NOVO AQUI
+import { InviteButton } from "./invite-button";
 
 export default async function AthletesListPage() {
   const supabase = await createClient();
@@ -13,7 +15,6 @@ export default async function AthletesListPage() {
 
   if (!user) redirect("/auth/login");
 
-  // Verifica se quem está acessando é realmente um fisioterapeuta
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -21,10 +22,9 @@ export default async function AthletesListPage() {
     .single();
 
   if (profile?.role !== "therapist") {
-    redirect("/dashboard"); // Se um atleta tentar acessar essa URL, ele é expulso pro Início
+    redirect("/dashboard"); 
   }
 
-  // Busca todos os atletas vinculados a este fisio em ordem alfabética
   const { data: athletes } = await supabase
     .from("profiles")
     .select("*")
@@ -44,6 +44,8 @@ export default async function AthletesListPage() {
             </h1>
             <p className="text-gray-500 mt-1">Gerencie seus atletas e acesse os prontuários clínicos.</p>
           </div>
+          {/* O NOSSO BOTÃO ENTRA AQUI! Passamos o ID do usuário (fisio) pra ele */}
+          <InviteButton therapistId={user.id} />
         </div>
 
         {/* Lista de Atletas */}
@@ -97,7 +99,7 @@ export default async function AthletesListPage() {
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-gray-700 mb-2">Nenhum paciente ainda</h3>
                 <p className="max-w-md mx-auto text-sm">
-                  Seus pacientes aparecerão aqui assim que se cadastrarem no aplicativo e informarem o seu ID de Fisioterapeuta.
+                  Seus pacientes aparecerão aqui assim que se cadastrarem no aplicativo. Clique no botão "Convidar Paciente" lá em cima para enviar o link no WhatsApp!
                 </p>
               </div>
             )}
