@@ -10,9 +10,9 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input"; // <-- NOVO
-import { Textarea } from "@/components/ui/textarea"; // <-- NOVO
-import { ArrowLeft, Trash2, Video, Calendar, Activity, Info, FileText, Plus, Loader2 } from "lucide-react"; // <-- NOVOS ICONES
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Trash2, Video, Calendar, Activity, Info, FileText, Plus, Loader2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -27,10 +27,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { FrequencyCalendar } from "@/components/FrequencyCalendar";
-import { DownloadReportButton } from "@/components/DownloadReportButton";
+import { DownloadReportButton } from "@/components/DownloadReportButton"; // O SEU BOTÃO ORIGINAL VOLTOU!
 import { BodyChart } from "@/components/BodyChart";
 
-// --- IMPORT DAS NOSSAS FUNÇÕES DE PRONTUÁRIO ---
 import { createNote, deleteNote } from "@/app/actions/notes";
 
 // Função para corrigir fuso horário
@@ -135,7 +134,6 @@ export default function AthleteDetailsPage() {
     }
   };
 
-  // --- FUNÇÕES DE PRONTUÁRIO ---
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newNote.trim()) return;
@@ -147,7 +145,6 @@ export default function AthleteDetailsPage() {
       alert("Erro ao salvar anotação: " + res.error);
     } else {
       setNewNote("");
-      // Recarrega as anotações para mostrar na tela instantaneamente
       const { data } = await supabase
         .from("session_notes")
         .select("*")
@@ -166,6 +163,7 @@ export default function AthleteDetailsPage() {
     else setNotes(notes.filter(n => n.id !== noteId));
   };
 
+  // OS DADOS PARA O SEU PDF COMPLETO
   const reportData = {
     athleteName: athlete?.full_name || "Atleta",
     athleteEmail: athlete?.email || "",
@@ -183,7 +181,6 @@ export default function AthleteDetailsPage() {
     <div className="min-h-screen p-6 flex justify-center">
       <div className="w-full max-w-6xl space-y-6">
         
-        {/* Cabeçalho */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild className="text-primary hover:bg-primary/10">
@@ -200,12 +197,12 @@ export default function AthleteDetailsPage() {
           </div>
 
           <div className="shrink-0">
+             {/* O SEU COMPONENTE ORIGINAL QUE EXPORTA TUDO */}
              <DownloadReportButton data={reportData} />
           </div>
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          {/* Menu de Abas (Agora com 3 colunas) */}
           <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 bg-muted p-1 rounded-lg h-auto">
             <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:text-primary font-medium py-2">
               Evolução e Frequência
@@ -218,7 +215,6 @@ export default function AthleteDetailsPage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* ABA 1: Visão Geral e Gráficos */}
           <TabsContent value="overview" className="space-y-6 mt-6">
             
             {latestFeedback ? (
@@ -230,7 +226,6 @@ export default function AthleteDetailsPage() {
                 </CardHeader>
                 <CardContent className="pt-6">
                    <div className="flex flex-col md:flex-row items-center gap-8">
-                      {/* Lado Esquerdo */}
                       <div className="flex-1 w-full space-y-6">
                          <div className="grid grid-cols-3 gap-4">
                             <div className="bg-red-50 p-4 rounded-xl text-center border border-red-100 shadow-sm">
@@ -252,7 +247,6 @@ export default function AthleteDetailsPage() {
                          </div>
                       </div>
 
-                      {/* Lado Direito */}
                       <div className="border p-4 rounded-xl bg-white shadow-sm shrink-0 flex flex-col items-center">
                           <p className="text-xs text-center text-gray-400 mb-2 uppercase font-bold">Mapa de Dor</p>
                           <BodyChart 
@@ -273,7 +267,6 @@ export default function AthleteDetailsPage() {
             <FrequencyCalendar dates={allDates} startDate={activeProtocol?.start_date || new Date().toISOString()} />
 
             <div className="grid gap-6 md:grid-cols-2">
-              {/* Gráfico */}
               <Card className="border-t-4 border-t-primary shadow-sm h-full">
                 <CardHeader>
                   <CardTitle className="text-primary">Evolução de Sintomas</CardTitle>
@@ -301,7 +294,6 @@ export default function AthleteDetailsPage() {
                 </div>
               </Card>
 
-              {/* Lista Feedback */}
               <Card className="border-t-4 border-t-secondary shadow-sm h-full">
                 <CardHeader>
                   <CardTitle className="text-secondary">Histórico Completo</CardTitle>
@@ -337,7 +329,6 @@ export default function AthleteDetailsPage() {
             </div>
           </TabsContent>
 
-          {/* ABA 2: Protocolo Ativo */}
           <TabsContent value="protocol" className="mt-6">
             {activeProtocol ? (
               <Card className="border-t-4 border-t-primary shadow-sm">
@@ -386,10 +377,7 @@ export default function AthleteDetailsPage() {
             )}
           </TabsContent>
 
-          {/* ABA 3: Prontuário (Anotações do Fisio) */}
           <TabsContent value="notes" className="mt-6 space-y-6">
-            
-            {/* CRIAR NOVA NOTA */}
             <Card className="border-t-4 border-t-emerald-500 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-emerald-700 flex items-center gap-2">
@@ -425,7 +413,6 @@ export default function AthleteDetailsPage() {
               </CardContent>
             </Card>
 
-            {/* LISTA DE NOTAS ANTIGAS */}
             <div className="space-y-4 pt-4">
                <h3 className="text-xl font-bold text-gray-800 px-1">Histórico Clínico</h3>
                {notes.length === 0 ? (
@@ -457,7 +444,6 @@ export default function AthleteDetailsPage() {
                  ))
                )}
             </div>
-
           </TabsContent>
         </Tabs>
 
