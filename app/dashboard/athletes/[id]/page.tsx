@@ -2,35 +2,23 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Trash2, Video, Calendar, Activity, Info, FileText, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Trash2, Video, Calendar, Activity, Info, FileText, Plus, Loader2, Sparkles, BrainCircuit } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+
 // Gráficos e Calendário
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { FrequencyCalendar } from "@/components/FrequencyCalendar";
 import { BodyChart } from "@/components/BodyChart";
 
 import { createNote, deleteNote } from "@/app/actions/notes";
 import { ExportPdfButton } from "./export-pdf-button";
+import { generateSummaryAction } from "@/app/actions/generate-summary"; // <-- NOVA AÇÃO DA IA
 
 function formatDate(dateString: string) {
   if (!dateString) return "-";
@@ -50,6 +38,10 @@ export default function AthleteDetailsPage() {
   const [newNote, setNewNote] = useState("");
   const [noteDate, setNoteDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [savingNote, setSavingNote] = useState(false);
+
+  // --- ESTADOS DA IA ---
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const params = useParams();
   const supabase = createClient();
@@ -116,6 +108,23 @@ export default function AthleteDetailsPage() {
     if (!res.error) setNotes(notes.filter(n => n.id !== noteId));
   };
 
+  // --- FUNÇÃO PARA GERAR O RESUMO COM A IA ---
+  const handleGenerateAISummary = async () => {
+    setIsGeneratingSummary(true);
+    const result = await generateSummaryAction({
+      athleteName: athlete.full_name,
+      notes,
+      feedbacks
+    });
+
+    if (result.success && result.summary) {
+      setAiSummary(result.summary);
+    } else {
+      alert(result.error || "Ocorreu um erro ao gerar o resumo.");
+    }
+    setIsGeneratingSummary(false);
+  };
+
   const latestFeedback = feedbacks.length > 0 ? feedbacks[0] : null;
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Carregando dados...</div>;
@@ -125,6 +134,7 @@ export default function AthleteDetailsPage() {
     <div className="min-h-screen p-6 flex justify-center overflow-hidden relative">
       <div className="w-full max-w-6xl space-y-6">
         
+        {/* CABEÇALHO */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild className="text-primary hover:bg-primary/10">
@@ -137,11 +147,44 @@ export default function AthleteDetailsPage() {
               </p>
             </div>
           </div>
-          <div className="shrink-0">
+          <div className="flex flex-wrap gap-2 shrink-0">
+             {/* BOTÃO DA IA */}
+             <Button 
+               onClick={handleGenerateAISummary} 
+               disabled={isGeneratingSummary || (notes.length === 0 && feedbacks.length === 0)}
+               className="bg-purple-600 hover:bg-purple-700 text-white shadow-sm"
+             >
+               {isGeneratingSummary ? (
+                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analisando...</>
+               ) : (
+                 <><Sparkles className="w-4 h-4 mr-2" /> Gerar Resumo (IA)</>
+               )}
+             </Button>
+             
              <ExportPdfButton athleteName={athlete.full_name} targetId="medical-report" />
           </div>
         </div>
 
+        {/* CARTÃO DO RESUMO IA (Só aparece quando gerado) */}
+        {aiSummary && (
+          <Card className="bg-purple-50 border-purple-200 shadow-sm animate-in fade-in slide-in-from-top-4">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-purple-800 flex items-center gap-2 text-lg">
+                <BrainCircuit className="w-5 h-5" /> Resumo Clínico Inteligente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-purple-900 leading-relaxed italic border-l-4 border-purple-400 pl-4 py-1">
+                "{aiSummary}"
+              </p>
+              <p className="text-xs text-purple-400 mt-3 font-medium">
+                Resumo gerado por Inteligência Artificial baseado no histórico do paciente. Este resumo será incluído automaticamente no PDF.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* RESTO DO CONTEÚDO (Abas, etc) */}
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 bg-muted p-1 rounded-lg h-auto">
             <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:text-primary font-medium py-2">Evolução e Frequência</TabsTrigger>
@@ -325,7 +368,6 @@ export default function AthleteDetailsPage() {
 
       {/* ======================================================= */}
       {/* RELATÓRIO MÉDICO COMPLETO (Para captura do PDF)         */}
-      {/* Incluindo Gráfico de Linha, Tabela e Histórico Completo */}
       {/* ======================================================= */}
       <div style={{ position: "absolute", left: "-9999px", top: 0, zIndex: -10 }}>
         <div id="medical-report" className="p-12 w-[800px] space-y-8" style={{ backgroundColor: "#ffffff", color: "#000000" }}>
@@ -359,7 +401,16 @@ export default function AthleteDetailsPage() {
             </div>
           </div>
 
-          {/* O GRÁFICO NOVO AQUI! (Sem animação e com tamanho fixo para o PDF) */}
+          {/* O RESUMO DA IA ENTRA NO PDF AQUI SE FOR GERADO */}
+          {aiSummary && (
+            <div className="p-6 rounded-lg border mt-8" style={{ backgroundColor: "#f5f3ff", borderColor: "#ede9fe" }}>
+              <h3 className="text-sm font-bold uppercase mb-2" style={{ color: "#6b21a8", display: "flex", alignItems: "center", gap: "8px" }}>
+                <BrainCircuit className="w-4 h-4" /> Resumo Clínico Integrado (Gerado por IA)
+              </h3>
+              <p className="text-sm italic" style={{ color: "#4c1d95" }}>{aiSummary}</p>
+            </div>
+          )}
+
           {chartData.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-bold mb-4 border-b pb-2" style={{ color: "#1f2937", borderColor: "#e5e7eb" }}>Gráfico de Evolução (Dor vs Fadiga)</h3>
@@ -368,7 +419,6 @@ export default function AthleteDetailsPage() {
                   <CartesianGrid stroke="#e2e8f0" strokeDasharray="5 5" />
                   <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} stroke="#64748b" />
                   <YAxis domain={[0, 10]} fontSize={12} tickLine={false} axisLine={false} stroke="#64748b" />
-                  {/* isAnimationActive={false} é obrigatório para a foto sair perfeita instantaneamente */}
                   <Line isAnimationActive={false} type="monotone" dataKey="dor" stroke="#dc2626" strokeWidth={3} name="Dor" dot={{ r: 4, fill: "#dc2626" }} />
                   <Line isAnimationActive={false} type="monotone" dataKey="fadiga" stroke="#ea580c" strokeWidth={3} name="Fadiga" dot={{ r: 4, fill: "#ea580c" }} />
                 </LineChart>
