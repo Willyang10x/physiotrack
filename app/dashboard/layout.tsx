@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/Sidebar";
 import { PushNotificationManager } from "@/components/PushNotificationManager"; // Lembra dele? Importante estar aqui!
+import { AiChatAssistant } from "@/components/ai-chat-assistant"; // <-- IMPORT DO NOSSO NOVO CHATBOT 🤖
 
 export default function DashboardLayout({
   children,
@@ -19,7 +20,7 @@ export default function DashboardLayout({
       {/* Conteúdo Principal (que rola) */}
       <main className="flex-1 overflow-y-auto w-full relative">
          {/* Colocamos o Gerenciador de Notificações aqui dentro.
-            Assim, ele só roda quando o usuário está logado no dashboard.
+           Assim, ele só roda quando o usuário está logado no dashboard.
          */}
          <PushNotificationManager />
 
@@ -27,6 +28,11 @@ export default function DashboardLayout({
          <div className="p-4 md:p-8 max-w-7xl mx-auto">
             {children}
          </div>
+
+         {/* ========================================= */}
+         {/* CHATBOT VIRTUAL FLUTUANTE                 */}
+         {/* ========================================= */}
+         <AiChatAssistant />
       </main>
     </div>
   );
