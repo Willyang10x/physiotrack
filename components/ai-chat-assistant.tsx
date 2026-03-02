@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Bot, Loader2 } from "lucide-react";
 import { chatAssistantAction } from "@/app/actions/chat-assistant";
+import { createClient } from "@/lib/supabase/client"; // <-- IMPORTANTE: Cliente do Supabase
 
 interface Message {
   role: "user" | "assistant";
@@ -19,7 +20,28 @@ export function AiChatAssistant() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
+  // Novo estado para guardar o cargo (role) do utilizador
+  const [userRole, setUserRole] = useState<string | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
+  const supabase = createClient();
+
+  // Quando o componente carrega, vai descobrir quem é que está a usar o sistema
+  useEffect(() => {
+    async function getUserRole() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        
+        if (profile) setUserRole(profile.role);
+      }
+    }
+    getUserRole();
+  }, [supabase]);
 
   // Faz scroll automático para a última mensagem
   useEffect(() => {
@@ -35,7 +57,6 @@ export function AiChatAssistant() {
     const userMsg = input.trim();
     setInput("");
     
-    // Adiciona a mensagem do utilizador à lista
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
 
@@ -50,13 +71,16 @@ export function AiChatAssistant() {
     setIsLoading(false);
   };
 
+  // MÁGICA AQUI: Se ainda estiver a carregar ou se for um fisioterapeuta, não renderiza nada! (Esconde o chat)
+  if (userRole !== "athlete") {
+    return null; 
+  }
+
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       
-      {/* Janela de Chat */}
       {isOpen && (
         <div className="bg-white w-80 sm:w-96 rounded-2xl shadow-2xl border border-gray-200 mb-4 overflow-hidden flex flex-col h-[450px] animate-in slide-in-from-bottom-5">
-          {/* Cabeçalho */}
           <div className="bg-gradient-to-r from-primary to-blue-600 p-4 flex justify-between items-center text-white">
             <div className="flex items-center gap-2">
               <Bot className="w-5 h-5" />
@@ -67,7 +91,6 @@ export function AiChatAssistant() {
             </Button>
           </div>
 
-          {/* Área de Mensagens */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50" ref={scrollRef}>
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -84,13 +107,12 @@ export function AiChatAssistant() {
               <div className="flex justify-start">
                 <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  <span className="text-xs text-gray-500 font-medium">A escrever...</span>
+                  <span className="text-xs text-gray-500 font-medium">A pensar...</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Input */}
           <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-100 flex gap-2">
             <Input 
               placeholder="Digite a sua dúvida..." 
@@ -105,7 +127,6 @@ export function AiChatAssistant() {
         </div>
       )}
 
-      {/* Botão Flutuante (Bolha) */}
       {!isOpen && (
         <Button 
           onClick={() => setIsOpen(true)}
