@@ -6,8 +6,10 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, ArrowRight, Activity, Search } from "lucide-react";
-// IMPORTA O NOSSO BOTÃO NOVO AQUI
 import { InviteButton } from "./invite-button";
+
+// IMPORTA O COMPONENTE DA IA PREVENTIVA
+import { RiskAlert } from "@/components/risk-alert";
 
 export default async function AthletesListPage() {
   const supabase = await createClient();
@@ -25,12 +27,27 @@ export default async function AthletesListPage() {
     redirect("/dashboard"); 
   }
 
-  const { data: athletes } = await supabase
+  // 1. Busca os atletas do fisioterapeuta
+  const { data: athletesData } = await supabase
     .from("profiles")
     .select("*")
     .eq("role", "athlete")
     .eq("assigned_therapist_id", user.id)
     .order("full_name", { ascending: true });
+
+  // 2. Busca os últimos 3 feedbacks de cada atleta para passar à IA
+  const athletes = await Promise.all(
+    (athletesData || []).map(async (athlete) => {
+      const { data: feedbacks } = await supabase
+        .from("daily_feedback")
+        .select("*")
+        .eq("athlete_id", athlete.id)
+        .order("date", { ascending: false })
+        .limit(3);
+        
+      return { ...athlete, feedbacks: feedbacks || [] };
+    })
+  );
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-gray-50">
@@ -44,7 +61,6 @@ export default async function AthletesListPage() {
             </h1>
             <p className="text-gray-500 mt-1">Gerencie seus atletas e acesse os prontuários clínicos.</p>
           </div>
-          {/* O NOSSO BOTÃO ENTRA AQUI! Passamos o ID do usuário (fisio) pra ele */}
           <InviteButton therapistId={user.id} />
         </div>
 
@@ -60,37 +76,48 @@ export default async function AthletesListPage() {
             {athletes && athletes.length > 0 ? (
               <div className="divide-y">
                 {athletes.map((athlete) => (
-                  <div key={athlete.id} className="p-4 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50 transition-colors">
+                  // Mudamos para flex-col para o alerta poder ficar na parte de baixo do cartão
+                  <div key={athlete.id} className="p-4 md:p-6 flex flex-col gap-4 hover:bg-gray-50 transition-colors">
                     
-                    {/* Info do Atleta */}
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xl font-bold uppercase overflow-hidden border border-primary/20 shadow-sm">
-                        {athlete.avatar_url ? (
-                          <img src={athlete.avatar_url} alt={athlete.full_name} className="w-full h-full object-cover" />
-                        ) : (
-                          athlete.full_name.charAt(0)
-                        )}
+                    {/* Linha Principal: Info e Botões */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      {/* Info do Atleta */}
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xl font-bold uppercase overflow-hidden border border-primary/20 shadow-sm">
+                          {athlete.avatar_url ? (
+                            <img src={athlete.avatar_url} alt={athlete.full_name} className="w-full h-full object-cover" />
+                          ) : (
+                            athlete.full_name.charAt(0)
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800 text-lg">{athlete.full_name}</p>
+                          <p className="text-sm text-gray-500">{athlete.email}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-gray-800 text-lg">{athlete.full_name}</p>
-                        <p className="text-sm text-gray-500">{athlete.email}</p>
+
+                      {/* Botões de Ação */}
+                      <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+                        <Button asChild variant="outline" className="w-full sm:w-auto border-primary/20 text-primary hover:bg-primary/5">
+                          <Link href={`/dashboard/protocols/create?athlete=${athlete.id}`}>
+                            <Activity className="w-4 h-4 mr-2" /> Novo Treino
+                          </Link>
+                        </Button>
+                        <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-sm">
+                          <Link href={`/dashboard/athletes/${athlete.id}`}>
+                            Prontuário <ArrowRight className="w-4 h-4 ml-2" />
+                          </Link>
+                        </Button>
                       </div>
                     </div>
 
-                    {/* Botões de Ação */}
-                    <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-                      <Button asChild variant="outline" className="w-full sm:w-auto border-primary/20 text-primary hover:bg-primary/5">
-                        <Link href={`/dashboard/protocols/create?athlete=${athlete.id}`}>
-                          <Activity className="w-4 h-4 mr-2" /> Novo Treino
-                        </Link>
-                      </Button>
-                      <Button asChild className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-sm">
-                        <Link href={`/dashboard/athletes/${athlete.id}`}>
-                          Prontuário <ArrowRight className="w-4 h-4 ml-2" />
-                        </Link>
-                      </Button>
-                    </div>
-
+                    {/* ALERTA DE RISCO IA (Só renderiza se o pré-filtro detetar perigo) */}
+                    {athlete.feedbacks && athlete.feedbacks.length > 0 && (
+                      <div className="mt-2">
+                        <RiskAlert athleteName={athlete.full_name} feedbacks={athlete.feedbacks} />
+                      </div>
+                    )}
+                    
                   </div>
                 ))}
               </div>
