@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Users, ArrowRight, Activity, Search } from "lucide-react";
 import { InviteButton } from "./invite-button";
 
-// IMPORTA O COMPONENTE DA IA PREVENTIVA
 import { RiskAlert } from "@/components/risk-alert";
+
+import { WhatsappButton } from "./whatsapp-button";
 
 export default async function AthletesListPage() {
   const supabase = await createClient();
@@ -98,6 +99,11 @@ export default async function AthletesListPage() {
 
                       {/* Botões de Ação */}
                       <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+                        <WhatsappButton 
+                          athleteId={athlete.id} 
+                          athleteName={athlete.full_name} 
+                          initialPhone={athlete.phone} 
+                        />
                         <Button asChild variant="outline" className="w-full sm:w-auto border-primary/20 text-primary hover:bg-primary/5">
                           <Link href={`/dashboard/protocols/create?athlete=${athlete.id}`}>
                             <Activity className="w-4 h-4 mr-2" /> Novo Treino
