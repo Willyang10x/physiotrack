@@ -50,6 +50,7 @@ interface Athlete {
   id: string;
   full_name: string;
   email: string;
+  phone?: string; // <-- ADICIONADO: O sistema agora sabe que o atleta pode ter telefone
 }
 
 export default function CreateProtocolPage() {
@@ -77,10 +78,10 @@ export default function CreateProtocolPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // 1. Busca os Atletas
+      // 1. Busca os Atletas (ADICIONADO O CAMPO 'phone')
       const { data: athletesData } = await supabase
         .from("profiles")
-        .select("id, full_name, email")
+        .select("id, full_name, email, phone")
         .eq("role", "athlete")
         .eq("assigned_therapist_id", user.id);
       if (athletesData) setAthletes(athletesData);
@@ -208,6 +209,23 @@ export default function CreateProtocolPage() {
       alert("Erro: " + result.error);
       setIsLoading(false);
     } else {
+      // ===== INÍCIO DA MÁGICA DO WHATSAPP =====
+      const athlete = athletes.find((a) => a.id === selectedAthlete);
+      
+      if (athlete && athlete.phone) {
+        // Limpa tudo o que não for número
+        const cleanPhone = athlete.phone.replace(/\D/g, "");
+        const appUrl = window.location.origin;
+        
+        // Monta a mensagem automática
+        const msg = `Olá ${athlete.full_name}, o seu novo protocolo de treino "${title}" já está disponível no PhysioTrack! 💪 Acesse aqui para iniciar: ${appUrl}`;
+        const whatsUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+        
+        // Abre o WhatsApp numa nova aba
+        window.open(whatsUrl, "_blank");
+      }
+      // ===== FIM DA MÁGICA DO WHATSAPP =====
+
       router.push("/dashboard");
     }
   };
