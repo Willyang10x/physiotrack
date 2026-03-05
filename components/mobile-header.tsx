@@ -5,16 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "@/components/Sidebar";
 import { useState } from "react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"; // Para acessibilidade
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import Image from "next/image"; // <-- IMPORTANTE: Importamos o componente de Imagem
 
 export function MobileHeader() {
   const [open, setOpen] = useState(false);
 
   return (
     <div className="md:hidden flex items-center justify-between bg-white border-b px-4 py-3 sticky top-0 z-40 shadow-sm">
-      <div className="flex items-center gap-2 font-bold text-primary text-xl tracking-tight">
-        <span className="bg-primary text-white w-8 h-8 flex items-center justify-center rounded-lg">P</span>
-        PhysioTrack
+      
+      {/* AQUI ENTRA A SUA LOGO OFICIAL */}
+      <div className="flex items-center">
+         <Image 
+           src="/FLAVICON-COM-RETANGULO-physio-track.png"
+           alt="PhysioTrack Logo"
+           width={40} // Tamanho ajustado para não ficar gigante no telemóvel
+           height={40}
+           className="object-contain"
+           priority
+         />
       </div>
       
       <Sheet open={open} onOpenChange={setOpen}>
