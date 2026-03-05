@@ -17,7 +17,7 @@ export function MobileHeader() {
          <Image 
            src="/FLAVICON-COM-RETANGULO-physio-track.png"
            alt="PhysioTrack Logo"
-           width={130} 
+           width={40} 
            height={40}
            className="object-contain"
            priority
