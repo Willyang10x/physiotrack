@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/Sidebar";
-import { PushNotificationManager } from "@/components/PushNotificationManager"; // Lembra dele? Importante estar aqui!
-import { AiChatAssistant } from "@/components/ai-chat-assistant"; // <-- IMPORT DO NOSSO NOVO CHATBOT 🤖
+import { PushNotificationManager } from "@/components/PushNotificationManager";
+import { AiChatAssistant } from "@/components/ai-chat-assistant";
+import { MobileHeader } from "@/components/mobile-header"; // <-- IMPORTAMOS O HEADER MOBILE
 
 export default function DashboardLayout({
   children,
@@ -9,29 +10,26 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* A Sidebar fica fixa na esquerda.
-        O 'hidden md:flex' esconde ela no celular (mobile) para não quebrar a tela 
-        (No futuro podemos criar um menu hambúrguer para celular).
-      */}
+      
+      {/* SIDEBAR DESKTOP (Escondida no mobile) */}
       <div className="hidden md:flex flex-col h-full border-r bg-white w-64 shrink-0">
          <Sidebar />
       </div>
 
-      {/* Conteúdo Principal (que rola) */}
-      <main className="flex-1 overflow-y-auto w-full relative">
-         {/* Colocamos o Gerenciador de Notificações aqui dentro.
-           Assim, ele só roda quando o usuário está logado no dashboard.
-         */}
+      {/* Conteúdo Principal */}
+      <main className="flex-1 overflow-y-auto w-full relative flex flex-col">
+         
+         {/* HEADER MOBILE (Só aparece em ecrãs pequenos) */}
+         <MobileHeader />
+
          <PushNotificationManager />
 
-         {/* Aqui entra o conteúdo das páginas (Feedbacks, Atletas, etc) */}
-         <div className="p-4 md:p-8 max-w-7xl mx-auto">
+         {/* Área de conteúdo principal */}
+         <div className="p-4 md:p-8 w-full max-w-7xl mx-auto flex-1">
             {children}
          </div>
 
-         {/* ========================================= */}
-         {/* CHATBOT VIRTUAL FLUTUANTE                 */}
-         {/* ========================================= */}
+         {/* Chatbot e Alertas Flutuantes */}
          <AiChatAssistant />
       </main>
     </div>
