@@ -65,7 +65,12 @@ const menuItems = [
   },
 ];
 
-export function Sidebar() {
+// --- ADICIONADO: Interface para aceitar a função de fechar o menu no mobile ---
+interface SidebarProps {
+  onNavigate?: () => void;
+}
+
+export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -93,7 +98,7 @@ export function Sidebar() {
       }
     }
     getUserRole();
-  }, []);
+  }, [supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -102,15 +107,16 @@ export function Sidebar() {
 
   if (loading) {
     return (
-      <aside className="w-64 border-r bg-white h-screen flex flex-col items-center justify-center sticky top-0 left-0 z-50 hidden md:flex">
-        {/* Loader com a cor oficial */}
+      // Removido o hidden md:flex para funcionar no mobile drawer
+      <aside className="w-full h-full flex flex-col items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-[#01456d]" />
       </aside>
     );
   }
 
   return (
-    <aside className="w-64 border-r bg-white h-screen flex flex-col sticky top-0 left-0 shadow-sm z-50 hidden md:flex">
+    // Removido o hidden md:flex e h-screen rígido para adaptar-se ao contêiner pai
+    <aside className="w-full h-full flex flex-col bg-white border-r">
       {/* --- LOGO PERSONALIZADA --- */}
       <div className="p-6 border-b flex flex-col items-center gap-3">
         {/* Imagem da Logo */}
@@ -138,6 +144,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onNavigate} // <-- ADICIONADO: Fecha o menu mobile ao clicar
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
                   isActive
                     ? "bg-[#01456d]/10 text-[#01456d] font-bold shadow-sm" // Fundo com 10% da cor oficial
