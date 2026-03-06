@@ -7,10 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Users, ArrowRight, Activity, Search } from "lucide-react";
 import { InviteButton } from "./invite-button";
-
 import { RiskAlert } from "@/components/risk-alert";
-
-import { WhatsappButton } from "./whatsapp-button";
 
 export default async function AthletesListPage() {
   const supabase = await createClient();
@@ -28,7 +25,6 @@ export default async function AthletesListPage() {
     redirect("/dashboard"); 
   }
 
-  // 1. Busca os atletas do fisioterapeuta
   const { data: athletesData } = await supabase
     .from("profiles")
     .select("*")
@@ -36,7 +32,6 @@ export default async function AthletesListPage() {
     .eq("assigned_therapist_id", user.id)
     .order("full_name", { ascending: true });
 
-  // 2. Busca os últimos 3 feedbacks de cada atleta para passar à IA
   const athletes = await Promise.all(
     (athletesData || []).map(async (athlete) => {
       const { data: feedbacks } = await supabase
@@ -51,23 +46,27 @@ export default async function AthletesListPage() {
   );
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-gray-50">
+    // Reduzida a margem no mobile de p-4 para p-3 ou px-4 para dar mais espaço à tela
+    <div className="min-h-screen p-4 md:p-8 bg-gray-50 overflow-x-hidden">
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Cabeçalho */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
-              <Users className="w-8 h-8" /> Meus Pacientes
+            <h1 className="text-2xl md:text-3xl font-bold text-primary flex items-center gap-3">
+              <Users className="w-7 h-7 md:w-8 md:h-8" /> Meus Pacientes
             </h1>
-            <p className="text-gray-500 mt-1">Gerencie seus atletas e acesse os prontuários clínicos.</p>
+            <p className="text-gray-500 mt-1 text-sm md:text-base">Gerencie seus atletas e acesse os prontuários.</p>
           </div>
-          <InviteButton therapistId={user.id} />
+          {/* Garantindo que o botão ocupa 100% da largura no mobile */}
+          <div className="w-full md:w-auto">
+            <InviteButton therapistId={user.id} />
+          </div>
         </div>
 
         {/* Lista de Atletas */}
         <Card className="shadow-sm border-t-4 border-t-primary">
-          <CardHeader className="bg-white border-b pb-4">
+          <CardHeader className="bg-white border-b pb-4 px-4 md:px-6">
             <CardTitle className="text-lg text-primary">Lista de Atletas Ativos</CardTitle>
             <CardDescription>
               Você possui {athletes?.length || 0} paciente(s) sob seus cuidados.
@@ -77,33 +76,26 @@ export default async function AthletesListPage() {
             {athletes && athletes.length > 0 ? (
               <div className="divide-y">
                 {athletes.map((athlete) => (
-                  // Mudamos para flex-col para o alerta poder ficar na parte de baixo do cartão
                   <div key={athlete.id} className="p-4 md:p-6 flex flex-col gap-4 hover:bg-gray-50 transition-colors">
                     
-                    {/* Linha Principal: Info e Botões */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       {/* Info do Atleta */}
                       <div className="flex items-center gap-4">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xl font-bold uppercase overflow-hidden border border-primary/20 shadow-sm">
+                        <div className="flex h-12 w-12 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xl font-bold uppercase overflow-hidden border border-primary/20 shadow-sm">
                           {athlete.avatar_url ? (
                             <img src={athlete.avatar_url} alt={athlete.full_name} className="w-full h-full object-cover" />
                           ) : (
                             athlete.full_name.charAt(0)
                           )}
                         </div>
-                        <div>
-                          <p className="font-bold text-gray-800 text-lg">{athlete.full_name}</p>
-                          <p className="text-sm text-gray-500">{athlete.email}</p>
+                        <div className="overflow-hidden">
+                          <p className="font-bold text-gray-800 text-base md:text-lg truncate">{athlete.full_name}</p>
+                          <p className="text-xs md:text-sm text-gray-500 truncate">{athlete.email}</p>
                         </div>
                       </div>
 
-                      {/* Botões de Ação */}
-                      <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-                        <WhatsappButton 
-                          athleteId={athlete.id} 
-                          athleteName={athlete.full_name} 
-                          initialPhone={athlete.phone} 
-                        />
+                      {/* Botões de Ação - Empilhados no mobile e lado-a-lado no PC */}
+                      <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
                         <Button asChild variant="outline" className="w-full sm:w-auto border-primary/20 text-primary hover:bg-primary/5">
                           <Link href={`/dashboard/protocols/create?athlete=${athlete.id}`}>
                             <Activity className="w-4 h-4 mr-2" /> Novo Treino
@@ -117,7 +109,6 @@ export default async function AthletesListPage() {
                       </div>
                     </div>
 
-                    {/* ALERTA DE RISCO IA (Só renderiza se o pré-filtro detetar perigo) */}
                     {athlete.feedbacks && athlete.feedbacks.length > 0 && (
                       <div className="mt-2">
                         <RiskAlert athleteName={athlete.full_name} feedbacks={athlete.feedbacks} />
@@ -128,11 +119,11 @@ export default async function AthletesListPage() {
                 ))}
               </div>
             ) : (
-              <div className="p-12 text-center text-gray-500">
-                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-700 mb-2">Nenhum paciente ainda</h3>
-                <p className="max-w-md mx-auto text-sm">
-                  Seus pacientes aparecerão aqui assim que se cadastrarem no aplicativo. Clique no botão "Convidar Paciente" lá em cima para enviar o link no WhatsApp!
+              <div className="p-8 md:p-12 text-center text-gray-500">
+                <Search className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg md:text-xl font-bold text-gray-700 mb-2">Nenhum paciente ainda</h3>
+                <p className="max-w-md mx-auto text-xs md:text-sm">
+                  Seus pacientes aparecerão aqui assim que se cadastrarem.
                 </p>
               </div>
             )}
