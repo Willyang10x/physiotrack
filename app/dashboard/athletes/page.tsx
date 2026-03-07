@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Users, ArrowRight, Activity, Search } from "lucide-react";
 import { InviteButton } from "./invite-button";
 import { RiskAlert } from "@/components/risk-alert";
+import { WhatsappButton } from "./whatsapp-button"; // <-- O BOTÃO VOLTOU AQUI!
 
 export default async function AthletesListPage() {
   const supabase = await createClient();
@@ -46,7 +47,6 @@ export default async function AthletesListPage() {
   );
 
   return (
-    // Reduzida a margem no mobile de p-4 para p-3 ou px-4 para dar mais espaço à tela
     <div className="min-h-screen p-4 md:p-8 bg-gray-50 overflow-x-hidden">
       <div className="max-w-5xl mx-auto space-y-6">
         
@@ -58,7 +58,6 @@ export default async function AthletesListPage() {
             </h1>
             <p className="text-gray-500 mt-1 text-sm md:text-base">Gerencie seus atletas e acesse os prontuários.</p>
           </div>
-          {/* Garantindo que o botão ocupa 100% da largura no mobile */}
           <div className="w-full md:w-auto">
             <InviteButton therapistId={user.id} />
           </div>
@@ -78,7 +77,7 @@ export default async function AthletesListPage() {
                 {athletes.map((athlete) => (
                   <div key={athlete.id} className="p-4 md:p-6 flex flex-col gap-4 hover:bg-gray-50 transition-colors">
                     
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                       {/* Info do Atleta */}
                       <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xl font-bold uppercase overflow-hidden border border-primary/20 shadow-sm">
@@ -94,8 +93,18 @@ export default async function AthletesListPage() {
                         </div>
                       </div>
 
-                      {/* Botões de Ação - Empilhados no mobile e lado-a-lado no PC */}
-                      <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
+                      {/* Botões de Ação */}
+                      <div className="flex flex-col sm:flex-row items-center gap-2 w-full xl:w-auto mt-2 xl:mt-0">
+                        
+                        {/* BOTÃO DO WHATSAPP AQUI */}
+                        <div className="w-full sm:w-auto">
+                          <WhatsappButton 
+                            athleteId={athlete.id} 
+                            athleteName={athlete.full_name} 
+                            initialPhone={athlete.phone} 
+                          />
+                        </div>
+
                         <Button asChild variant="outline" className="w-full sm:w-auto border-primary/20 text-primary hover:bg-primary/5">
                           <Link href={`/dashboard/protocols/create?athlete=${athlete.id}`}>
                             <Activity className="w-4 h-4 mr-2" /> Novo Treino
