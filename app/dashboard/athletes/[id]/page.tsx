@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Trash2, Video, Calendar, Activity, Info, FileText, Plus, Loader2, Sparkles, BrainCircuit, ClipboardList } from "lucide-react";
+import { ArrowLeft, Trash2, Video, Calendar, Activity, Info, FileText, Plus, Loader2, Sparkles, BrainCircuit } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -49,8 +49,7 @@ export default function AthleteDetailsPage() {
 
   useEffect(() => {
     async function loadData() {
-      // MÁGICA AQUI: Forçando a busca das colunas novas (anamnesis_text, clinical_summary)
-      const { data: profile } = await supabase.from("profiles").select("*, anamnesis_text, clinical_summary").eq("id", athleteId).single();
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", athleteId).single();
       setAthlete(profile);
 
       const { data: protocol } = await supabase.from("protocols").select("*").eq("athlete_id", athleteId).eq("status", "active").single();
@@ -158,7 +157,7 @@ export default function AthleteDetailsPage() {
                {isGeneratingSummary ? (
                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analisando...</>
                ) : (
-                 <><Sparkles className="w-4 h-4 mr-2" /> Gerar Evolução (IA)</>
+                 <><Sparkles className="w-4 h-4 mr-2" /> Gerar Resumo (IA)</>
                )}
              </Button>
              
@@ -166,51 +165,12 @@ export default function AthleteDetailsPage() {
           </div>
         </div>
 
-        {/* ======================================================= */}
-        {/* NOVO: CARTÃO DOURADO DO RESUMO DA ANAMNESE (IA) */}
-        {/* ======================================================= */}
-        {athlete.clinical_summary && (
-          <Card className="shadow-md border-t-4 border-t-amber-500 bg-gradient-to-br from-amber-50 to-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <ClipboardList className="w-24 h-24 text-amber-900" />
-            </div>
-            <CardHeader className="pb-2 relative z-10">
-              <CardTitle className="text-amber-800 flex items-center gap-2 text-lg md:text-xl">
-                <Sparkles className="w-5 h-5 text-amber-600" /> 
-                Avaliação Inicial (Gerada por IA)
-              </CardTitle>
-              <CardDescription className="text-amber-700/70">
-                Resumo criado automaticamente com base nas respostas do paciente.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="relative z-10">
-              <div className="text-gray-800 whitespace-pre-wrap font-medium leading-relaxed bg-white/60 p-4 rounded-xl border border-amber-100/50">
-                {athlete.clinical_summary}
-              </div>
-              
-              {/* Acordeão para ver as respostas completas originais */}
-              {athlete.anamnesis_text && (
-                <div className="mt-4 pt-4 border-t border-amber-200/50">
-                  <details className="text-sm text-gray-500 cursor-pointer group">
-                    <summary className="font-semibold text-amber-600 hover:text-amber-700 outline-none flex items-center gap-1">
-                      <span>Ver respostas originais do paciente</span>
-                    </summary>
-                    <div className="mt-3 p-4 bg-white rounded-lg border border-gray-100 shadow-inner text-gray-600 whitespace-pre-wrap cursor-text">
-                      {athlete.anamnesis_text}
-                    </div>
-                  </details>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* CARTÃO DO RESUMO IA DAS SESSÕES (Existente, Roxo) */}
+        {/* CARTÃO DO RESUMO IA (Só aparece quando gerado) */}
         {aiSummary && (
           <Card className="bg-purple-50 border-purple-200 shadow-sm animate-in fade-in slide-in-from-top-4">
             <CardHeader className="pb-2">
               <CardTitle className="text-purple-800 flex items-center gap-2 text-lg">
-                <BrainCircuit className="w-5 h-5" /> Evolução Inteligente das Sessões
+                <BrainCircuit className="w-5 h-5" /> Resumo Clínico Inteligente
               </CardTitle>
             </CardHeader>
             <CardContent>
